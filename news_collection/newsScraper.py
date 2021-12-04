@@ -19,7 +19,7 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/201
 
 load_dotenv()
 
-from GoogleNews import GoogleNews
+from pygooglenews import GoogleNews
 def compile_google_news(start_date='2020-11-01', end_date='2020-11-30'):
     ARTICLES_DIR = join('../data', 'Google-News')
     makedirs(ARTICLES_DIR, exist_ok=True)
@@ -121,14 +121,12 @@ def compile_newyorktimes(start_date="2021-11-01", end_date="2021-11-30"):
         print("Saved Json: ", fname)
         news.to_json(fname, orient="records", lines=True)
 
+import yfinance as yf
+def compile_yahoo_finance():
+    tsla = yf.Ticker("TSLA")
+    print(tsla.get_news())
 
-if __name__ == "__main__":
-    compile_google_news()
-    compile_guardian()
-    compile_newyorktimes()
 
-
-"""
 tickers = ['AMZN', 'TSLA', 'GOOG', 'GOOGL', 'AAPL', 'MSFT']
 #https://github.com/bck1990/stock_news_sentiment_analysis
 def compile_finviz(start_date, end_date):
@@ -174,7 +172,6 @@ def compile_finviz(start_date, end_date):
 
     return parsed_news
 
-#compile_finviz(0,0)
 
 from newsapi import NewsApiClient
 # max one month
@@ -195,5 +192,15 @@ def compile_newsapi(start_date, end_date):
         # re-serialize it for pretty indentation
         f.write(json.dumps(data, indent=2))
 
-#compile_newsapi("2021-11-03", "2021-12-02")
-"""
+
+
+
+if __name__ == "__main__":
+    start_date = '2021-01-01'
+    end_date = '2021-11-30'
+    compile_google_news(start_date, end_date)
+    #compile_guardian(start_date, end_date)
+    #compile_newyorktimes(start_date, end_date)
+    #compile_yahoo_finance()
+    #compile_finviz(start_date, end_date)
+    #compile_newsapi(start_date, end_date)
