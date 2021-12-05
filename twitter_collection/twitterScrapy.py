@@ -26,12 +26,14 @@ def make_request(headers, keywords):
             params = "query=" + key + " lang:en is:quote is:verified" \
                  "&tweet.fields=created_at,text&max_results=100"
             response = requests.request("GET", url, params=params, headers=headers).json()
-            df = make_df(response)
+            df = make_df(response, key)
             df.to_json(tweets_json, orient='records', lines=True)
 
 
-def make_df(response):
-    return pd.DataFrame(response['data'])
+def make_df(response, key):
+    df = pd.DataFrame(response['data'])
+    df.insert(0, 'Keyword', key)
+    return df
 
 
 if __name__ == "__main__":
