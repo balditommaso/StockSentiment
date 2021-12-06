@@ -4,15 +4,23 @@ import pandas as pd
 from pathlib import Path
 from os.path import join
 
-# Creating list to append tweet data to
-def get_tweets(start_date, end_date, keyword, dir_path):
+
+def get_tweets(start_date, end_date, keyword, ticker, dir_path):
+    """
+
+    :param start_date:
+    :param end_date:
+    :param keyword:
+    :param dir_path:
+    :return:
+    """
     tweets_list = []
 
     for i, tweet in enumerate(
             sntwitter.TwitterSearchScraper('TSLA tesla since:2021-11-05 until:2021-12-05').get_items()):
 
         #counter
-        print(i)
+        print(i, " ", tweet.date)
 
        # if tweet.likeCount > tot   ### filter unpopular tweets
         tweets_list.append([tweet.id, tweet.url, tweet.user.username, tweet.content, tweet.date, tweet.retweetCount,
