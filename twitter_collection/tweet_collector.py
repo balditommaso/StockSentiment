@@ -17,7 +17,7 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
     tweets_list = []
 
     for i, tweet in enumerate(
-            sntwitter.TwitterSearchScraper('TSLA tesla since:2021-11-05 until:2021-12-05').get_items()):
+            sntwitter.TwitterSearchScraper(keyword + ' since:' + start_date + ' until:' + end_date).get_items()):
 
         #counter
         print(i, " ", tweet.date)
@@ -41,7 +41,7 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
 if __name__ == "__main__":
     start_date = "2020-12-06"
     end_date = "2021-12-05"
-    keyword = "tesla OR TSLA"
+    keyword = "tesla TSLA"
     ticker = 'TSLA'
     dir_path = '../data'
     Path(dir_path).mkdir(parents=True, exist_ok=True)
