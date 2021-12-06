@@ -55,7 +55,6 @@ def get_finhub_news(start_date, end_date, tickers, dir_path):
             r = requests.get('https://finnhub.io/api/v1/company-news?symbol=' + ticker + '&from=' + date + '&to=' + date
                              + '&token=' + finhub_key)
             data += r.json()
-            print(data)
             date_obj = date_obj + relativedelta(days=1)
             date = date_obj.strftime("%Y-%m-%d")
             if nb_request == (max_call - 1):
@@ -71,7 +70,7 @@ def get_finhub_news(start_date, end_date, tickers, dir_path):
                         }
             news = news.append(contents, ignore_index=True)
 
-        fname = join(dir_path, ticker + '_' + start_date + '_' + end_date + '.json')
+        fname = join(dir_path, 'news_' + ticker + '_' + start_date + '_' + end_date + '.json')
 
         with open(fname, 'w') as f:
             print("Saved Json: ", fname)
@@ -79,10 +78,10 @@ def get_finhub_news(start_date, end_date, tickers, dir_path):
 
 
 if __name__ == "__main__":
-    start_date = "2020-12-05"
-    end_date = "2021-12-03"
+    start_date = "2020-12-06"
+    end_date = "2021-12-04"
     #tickers = get_S&P500_tickers.get_tickers()
-    tickers = ['TSLA']
+    tickers = ['AMZN']
     dir_path = '../data'
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     get_finhub_news(start_date, end_date, tickers, dir_path)
