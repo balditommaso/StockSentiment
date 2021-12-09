@@ -23,11 +23,11 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
         print(i, " ", tweet.date)
 
        # if tweet.likeCount > tot   ### filter unpopular tweets
-        tweets_list.append([tweet.id, tweet.url, tweet.user.username, tweet.content, tweet.date, tweet.retweetCount,
-                            tweet.likeCount, tweet.replyCount])
+        tweets_list.append([tweet.id, tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date,
+                            tweet.retweetCount, tweet.likeCount, tweet.replyCount])
 
     # Creating a dataframe from the tweets list above
-    tweets_df = pd.DataFrame(tweets_list, columns=['Tweet_ID', 'URL', "Account_Name", 'Text', 'Datetime',
+    tweets_df = pd.DataFrame(tweets_list, columns=['Tweet_ID', 'Account_Name', 'Account_Followers', 'Text', 'Datetime',
                                                    'Number_Retweets', 'Number_Likes', 'Number_Comments'])
     print(tweets_df)
 
