@@ -54,7 +54,7 @@ def remove_digits(text):
 
 
 def select_only_ASCII(text):
-    return re.sub(r'[^\p{Latin}]', '', text)
+    return text.encode('ascii', 'ignore')
 
 
 if __name__ == "__main__":
