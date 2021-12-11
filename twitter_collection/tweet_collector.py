@@ -23,11 +23,11 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
         print(i, " ", tweet.date)
 
        # if tweet.likeCount > tot   ### filter unpopular tweets
-        tweets_list.append([tweet.id, tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date,
-                            tweet.retweetCount, tweet.likeCount, tweet.replyCount])
+        tweets_list.append([tweet.id, tweet.url, tweet.user.username, tweet.content, tweet.date, tweet.retweetCount,
+                            tweet.likeCount, tweet.replyCount])
 
     # Creating a dataframe from the tweets list above
-    tweets_df = pd.DataFrame(tweets_list, columns=['Tweet_ID', 'Account_Name', 'Account_Followers', 'Text', 'Datetime',
+    tweets_df = pd.DataFrame(tweets_list, columns=['Tweet_ID', 'URL', "Account_Name", 'Text', 'Datetime',
                                                    'Number_Retweets', 'Number_Likes', 'Number_Comments'])
     print(tweets_df)
 
@@ -39,10 +39,10 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
 
 
 if __name__ == "__main__":
-    start_date = "2020-12-06"
-    end_date = "2021-12-08"
-    keyword = "tesla TSLA"
-    ticker = 'TSLA'
-    dir_path = './data'
+    start_date = "2021-12-06"
+    end_date = "2021-12-09"
+    keyword = "amazon AMZN"
+    ticker = 'AMZN'
+    dir_path = '../data'
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     get_tweets(start_date, end_date, keyword, ticker, dir_path)
