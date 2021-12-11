@@ -17,6 +17,7 @@ import re
 from langdetect import detect
 from bs4 import BeautifulSoup
 
+
 def removeSpecialChars(tweet):
     '''
     Removes special characters which are specifically found in tweets.
@@ -51,6 +52,7 @@ def removeAllNonAlpha(tweet):
 
     return tweet
 
+
 def select_only_english(df):
     """
     Method that drops all the rows containing non-english tweets
@@ -60,7 +62,6 @@ def select_only_english(df):
     print("Removing non-english tweets ...")
 
     for index, row in df.iterrows():
-
         try:
             if detect(row['text']) != 'en':
                 df.drop(index, inplace=True)
@@ -71,12 +72,13 @@ def select_only_english(df):
             print(f'Line {index} dropped')
     return df
 
+
 def train():
     df = pd.read_csv('news_with_sentiment.csv')
 
     #Code for data preprocessing
     #    df = df.sample(frac=0.02) to use when the dataset is too large
-    #    #df = df['text']
+    #    df = df['text']
     df['text'] = df['text'].str.lower()
     df['text'] = df['text'].apply(removeSpecialChars)
     df['text'] = df['text'].apply(removeAllNonAlpha)
