@@ -63,24 +63,19 @@ if __name__ == "__main__":
     # keep lowercase
     df['Text'] = df['Text'].str.lower()
     # remove noisy tweets
-    select_only_keyword(df, 'amazon', 'AMZN')
-    select_only_english(df)
+    df = select_only_keyword(df, 'amazon', 'AMZN')
+    df = select_only_english(df)
     # remove punctuation
+    ####### REMOVE URL and USERNAMES
     df['Text'] = df['Text'].apply(remove_puntuaction)
     df['Text'] = df['Text'].apply(remove_emoji)
     df['Text'] = df['Text'].str.replace('\n', ' ')
     df['Text'] = df['Text'].apply(remove_digits)
+    df['Text'] = df['Text'].apply(select_only_ASCII)
     print(df['Text'])
 
     # create JSON file (test)
-    fname = "../data/AMZN_filter_test.json"
+    fname = "../data/tweets_AMZN_filter_test.json"
     with open(fname, 'w') as f:
         print("Saved Json: ", fname)
         df.to_json(fname, orient="records", lines=True)
-
-
-
-
-
-
-
