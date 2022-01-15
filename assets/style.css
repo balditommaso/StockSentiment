@@ -1,0 +1,19 @@
+body {
+    font-family: "sens-serif helvica";
+    text-align: center;
+    background-color: cornflowerblue;
+    padding: 30px 120px 30px 120px;
+}
+
+.app-header {
+    height: 60px;
+    line-height: 60px;
+    border-bottom: thin lightgrey solid;
+}
+
+.app-header .title {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+
