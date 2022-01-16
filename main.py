@@ -2,15 +2,16 @@ import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
 
-import Preprocessing.costants as const
+import preprocessing.costants as const
 
 stylesheet = ['./assets/style.css']
 
-app = dash.Dash(__name__, external_stylesheets=stylesheet)
-
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+                                # Prova [dbc.themes.LUX]
 app.layout = html.Div([
     html.Div(
         className="app-header",
