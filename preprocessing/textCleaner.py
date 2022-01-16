@@ -1,5 +1,5 @@
 import pandas as pd
-import costants as cs
+from common import costants as cs
 from langdetect import detect
 import re
 
@@ -94,7 +94,7 @@ def save_file(ticker, df):
     :param df:
     :return:
     """
-    fname = '../data/filteredTweets_' + ticker + '_test.json'
+    fname = '../data/tweets/cleanTweets' + str(ticker) + '.json'
     with open(fname, 'w') as f:
         print("Saved JSON: ", fname)
         df.to_json(fname, orient="records", lines=True)

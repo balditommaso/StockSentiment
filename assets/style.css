@@ -1,8 +1,8 @@
 body {
     font-family: "sens-serif helvica";
-    text-align: center;
-    background-color: cornflowerblue;
+    background-color: whitesmoke;
     padding: 30px 120px 30px 120px;
+    width: 100%;
 }
 
 .app-header {
@@ -14,6 +14,13 @@ body {
 .app-header .title {
     font-size: 22px;
     font-weight: bold;
+}
+
+.set-option {
+    border-bottom: lightgrey;
+    margin: 10px;
+    padding: 10px;
+    width: 50%;
 }
 
 
