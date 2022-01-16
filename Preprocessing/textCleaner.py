@@ -64,6 +64,13 @@ def remove_special_char(text):
     text = text.replace('\n', ' ')
     # remove non-ASCII character
     text = re.sub('([^\x00-\x7F])+', '', text)
+    # Convert www.* or https?://* to empty strings
+    text = re.sub('(http[A-Za-z]*)', '', text)
+    # Convert @username to empty strings
+    text = re.sub(r'@[^\s]+', '', text)
+    # remove multiple spaces
+    text = " ".join(text.split())
+
     return text
 
 
@@ -91,6 +98,7 @@ def save_file(ticker, df):
     with open(fname, 'w') as f:
         print("Saved JSON: ", fname)
         df.to_json(fname, orient="records", lines=True)
+
 
 def filter_tweets(path):
     """
