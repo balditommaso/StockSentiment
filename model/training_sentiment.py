@@ -1,7 +1,10 @@
+from collections import Counter
+
 import joblib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from imblearn.datasets import make_imbalance
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -10,6 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from sklearn.utils import resample
 from xgboost import XGBClassifier
 
 from sklearn.pipeline import Pipeline
@@ -74,21 +78,30 @@ def select_only_english(df):
 
 
 def train():
-    df = pd.read_csv('news_with_sentiment.csv')
+    df = pd.read_csv('tweets_with_sentiment.csv')
+    df['text'] = df['text'].astype(str)
 
     #Code for data preprocessing
     #    df = df.sample(frac=0.02) to use when the dataset is too large
     #    df = df['text']
     df['text'] = df['text'].str.lower()
-    df['text'] = df['text'].apply(removeSpecialChars)
-    df['text'] = df['text'].apply(removeAllNonAlpha)
+    #df['text'] = df['text'].apply(removeSpecialChars)
+    #df['text'] = df['text'].apply(removeAllNonAlpha)
     #df = select_only_english(df)
 
     #df.to_csv('training_set_to_label.csv', index=False)
+    x_train, x_test, y_train, y_test = train_test_split(df['text'], df['target'], test_size=0.2, random_state=11)
 
+    print("Before undersampling: ", Counter(y_train))
 
-    training_set, test_set = train_test_split(df, test_size=0.2, random_state=11)
+    # Convert x_train to np_array for rebalance
+    x_train = x_train.values.reshape(-1, 1)
+    x_train, y_train = make_imbalance(x_train, y_train,
+                                      sampling_strategy={'positive': 491, 'neutral': 491, 'negative': 491}, random_state=0)
 
+    # Return to pandas series
+    x_train = pd.Series(np.squeeze(x_train))
+    print("After undersampling: ", Counter(y_train))
 
     # Pipeline Classifier
     clf = Pipeline([
@@ -100,20 +113,20 @@ def train():
     ])
 
     # Training the Pipeline Classifier
-    clf.fit(training_set.text, training_set.target)
+    clf.fit(x_train, y_train)
 
     #Testing of the Pipeline
-    predicted = clf.predict(test_set['text'])
+    predicted = clf.predict(x_test)
 
     #Extracting statistics and metrics
-    accuracy = accuracy_score(predicted, test_set['target'])
+    accuracy = accuracy_score(predicted, y_test)
     print("Accuracy on test set: ", accuracy)
     print("Metrics per class on test set:")
 
     print("Confusion matrix:")
-    metrics.confusion_matrix(test_set['target'], predicted)
+    metrics.confusion_matrix(y_test, predicted)
 
-    print(metrics.classification_report(test_set['target'], predicted,
+    print(metrics.classification_report(y_test, predicted,
         target_names=["positive", "neutral", "negative"]))
 
     # Save the classifier
