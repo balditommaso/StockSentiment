@@ -21,8 +21,8 @@ def train():
     df1 = df1.rename(columns={'Open': 'S&P 500 Open', 'Close': 'S&P 500 Close'})
 
     # Join dataframes
-    df = pd.merge(df[['Date', 'Stock Open', 'Stock Close']], df1[['Date', 'S&P 500 Open', 'S&P 500 Close']], on='Date',
-                  how='outer')
+    df = pd.merge(df[['Date', 'Stock Open', 'Stock Close']], df1[['Date', 'S&P 500 Open', 'S&P 500 Close']],
+                  on='Date', how='outer')
 
     # Add previous day close price
     df['Stock Close Prev'] = df['Stock Close'].shift(1)
@@ -44,15 +44,15 @@ def train():
     df.dropna(inplace=True)
 
     # Re order columns
-    df = df[['Date', 'Stock Open', 'Stock Close', 'Stock Close Prev', 'Stock Close EMA',
-            'S&P 500 Open', 'S&P 500 Close Prev', 'S&P 500 Close EMA']]
+    df = df[['Date', 'Stock Close', 'Stock Close Prev', 'Stock Close EMA',
+             'S&P 500 Close Prev', 'S&P 500 Close EMA']]
 
     # Save final dataset
     with open("stock_prediction_dataset.json", mode='w', encoding='utf-8') as final_dataset_json:
         df.to_json(path_or_buf=final_dataset_json, orient='records', lines=True, index=True, date_format='iso')
 
-    x_train, x_test, y_train, y_test = train_test_split(df[['Stock Open', 'Stock Close Prev', 'Stock Close EMA',
-                                                            'S&P 500 Open', 'S&P 500 Close Prev', 'S&P 500 Close EMA']],
+    x_train, x_test, y_train, y_test = train_test_split(df[['Stock Close Prev', 'Stock Close EMA',
+                                                            'S&P 500 Close Prev', 'S&P 500 Close EMA']],
                                                         df[['Stock Close']], test_size=.2,
                                                         shuffle=False, random_state=0)
 
@@ -86,14 +86,12 @@ def train():
         print(msg)
 
     """
+
     # Create Regression Model
-    clf = LinearRegression()
-    #clf = Lasso(tol=7.939e+02)
-    #clf = ElasticNet(tol=5.293e+02)
-    #clf = KNeighborsRegressor()
-    #clf = DecisionTreeRegressor()
+    #clf = LinearRegression()
+    #clf = Lasso()
+    clf = ElasticNet()
     #clf = RandomForestRegressor(max_depth=2, random_state=0)
-    #clf = SVR() # does not work
 
     # Train the model
     clf.fit(x_train, y_train)
@@ -112,7 +110,8 @@ def train():
     plt.legend(loc='upper center')
     plt.ylabel('Close prices')
     plt.title('Amazon (NASDAQ:AMZN)')
-    #plt.show()
+    plt.show()
 
 
 train()
+
