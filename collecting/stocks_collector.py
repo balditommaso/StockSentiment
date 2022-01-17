@@ -36,7 +36,7 @@ def update_stocks():
     # take the current day
     today = datetime.now() - relativedelta(days=1)
     end_date = today.strftime('%d/%m/%Y')
-    # take the last updatede day
+    # take the last updated day
     for stock in target_company:
         fname = "data/historical_data/" + stock['ticker'] + ".json"
         with open(fname, mode='r') as saveded_stocks:
@@ -51,7 +51,7 @@ def update_stocks():
                                                            from_date=start_date,
                                                            to_date=end_date)
         except:
-            print(stock['ticker'], ": stocks updatede")
+            print(stock['ticker'], ": historical data updated")
             continue
         updated_stocks.insert(6, 'Stock', stock['ticker'])
         updated_stocks.reset_index(inplace=True)
@@ -74,12 +74,12 @@ def import_index_data(start_date):
                                             from_date=start_date,
                                             to_date=format_day)
     df.reset_index(inplace=True)
-    with open("../data/historical_data/s&p500.json", mode='w', encoding='utf-8') as sp500_json:
+    with open("../data/historical_data/S&P500.json", mode='w', encoding='utf-8') as sp500_json:
         df.to_json(path_or_buf=sp500_json, orient='records', lines=True, index=True, date_format='iso')
 
 
 if __name__ == "__main__":
     #target_date = input('insert the date for downloading the STOCKS: (dd/mm/yyyy)\n')
-    start_date = "1/1/2021"
-    import_stocks_data(start_date)
-    #import_index_data(start_date)
+    start_date = "1/1/2017"
+    #import_stocks_data(start_date)
+    import_index_data(start_date)
