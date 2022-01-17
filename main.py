@@ -7,6 +7,7 @@ import plotly.express as px
 import pandas as pd
 
 import common.costants as const
+from collecting.stocks_collector import update_stocks
 
 stylesheet = ['./assets/style.css']
 
@@ -14,40 +15,62 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
 app.layout = html.Div([
     html.Div(
-        className="app-header",
+        id="container",
         children=[
-            html.Div('Stock Value Predictor', className="title")
-        ]
-    ),
-    html.Div(
-        className="set-option",
-        children=[
-            html.Label('Select Stock:'),
-            dcc.Dropdown(
-                id='select-stock',
-                options=[{'label': i['name'], 'value': i['ticker']} for i in const.target_company],
-                value="NONE"
+            html.Div(
+                className="app-header",
+                children=[
+                    html.Div('Stock Value Predictor', className="title"),
+                    html.Label("your best friend for investments")
+                ]
             ),
-        ]
-    ),
-    html.Div(
-        className="graph-view",
-        children=[
-            dcc.Graph(id='stocks-view')
+            html.Hr(),
+            html.Div(
+                className="set-option",
+                children=[
+                    dcc.Dropdown(
+                        id='select-stock',
+                        placeholder='Select Stock',
+                        options=[{'label': i['name'], 'value': i['ticker']} for i in const.target_company],
+                        value=None
+                    ),
+                    html.Button(
+                        "Predict",
+                        id='predict'
+                    )
+                ]
+            ),
+            html.Div(
+                id='stocks-view',
+                children=[
+                    dcc.RangeSlider(
+                        id='select-period',
+
+                    ),
+                    dcc.Graph(id='graph-view'),
+                ]
+            ),
+            html.Div(
+                id="tweets-view",
+                className="list",
+                children=[
+                    html.Label("Analyzed tweets:")
+                ]
+            )
         ]
     )
 ])
 
 @app.callback(
-    Output("stocks-view", "figure"),
+    Output("graph-view", "figure"),
     Input("select-stock", "value")
 )
 def show_stock_graph(ticker):
-    if ticker == 'NONE':
+    print(ticker)
+    if ticker is None:
         return {}
     file_name = "data/historical_data/" + str(ticker) + ".json"
     stocks_df = pd.read_json(file_name, lines=True)
-    print(stocks_df.head())
     fig = px.line(stocks_df,
                   x="Date",
                   y="Open",
@@ -56,6 +79,10 @@ def show_stock_graph(ticker):
                   render_mode="svg")
     return fig
 
+# load tweets of the day
+
 
 if __name__ == '__main__':
+    update_stocks()
     app.run_server(debug=True)
+
