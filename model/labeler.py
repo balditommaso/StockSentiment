@@ -35,7 +35,16 @@ if __name__ == "__main__":
                         label = ask_label(data["Text"])
                         if label == "stop":
                             break
-                        row = {"text": data["Text"], "target": label}
+                        row = {
+                            "datetime": data['Datetime'],
+                            "username": data['Account_Name'],
+                            "text": data['Text'],
+                            "target": label,
+                            "number_follower": data['Number_Follower'],
+                            "number_retweets": data['Number_Retweets'],
+                            "number_likes": data['Number_Likes'],
+                            "number_comments": data['Number_Comments']
+                        }
                         feeds.append(row)
             with open("../data/train/tweets_with_label.json", mode='w') as f:
                 f.write(json.dumps(feeds, indent=2))
