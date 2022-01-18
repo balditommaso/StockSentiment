@@ -1,7 +1,7 @@
 import json
 
 def ask_label(text):
-    print("Text: \n" + text + "\n")
+    print("--------------- Text --------------- \n" + text + "\n")
     label = input("Select label: (pos, neg, neu, stop)\n")
     if label == "pos":
         label = "positive"
@@ -23,10 +23,10 @@ if __name__ == "__main__":
                   "\t- news\n"
                   "\t- quit\n")
         elif command == "tweets":
-            with open("../data/train/tweets_with_label.json") as feedsjson:
+            with open("../data/train/tweetsTSLA_with_label.json") as feedsjson:
                 feeds = json.load(feedsjson)
                 skip = len(feeds)
-                with open("../data/tweets/tweets_TSLA_2020-12-06_2021-12-08.json") as file:
+                with open("../data/tweets/tweets_TSLA_2021-01-18_2022-01-18.json") as file:
                     for line in file:
                         if skip > 0:
                             skip = skip - 1
@@ -46,7 +46,7 @@ if __name__ == "__main__":
                             "number_comments": data['Number_Comments']
                         }
                         feeds.append(row)
-            with open("../data/train/tweets_with_label.json", mode='w') as f:
+            with open("../data/train/tweetsTSLA_with_label.json", mode='w') as f:
                 f.write(json.dumps(feeds, indent=2))
         elif command == "news":
             with open("../data/train/news_with_label.json") as feedsjson:
