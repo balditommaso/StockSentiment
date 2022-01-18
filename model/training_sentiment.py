@@ -97,7 +97,8 @@ def train():
     # Convert x_train to np_array for rebalance
     x_train = x_train.values.reshape(-1, 1)
     x_train, y_train = make_imbalance(x_train, y_train,
-                                      sampling_strategy={'positive': 491, 'neutral': 491, 'negative': 491}, random_state=0)
+                                      sampling_strategy={'positive': 491, 'neutral': 491, 'negative': 491},
+                                      random_state=0)
 
     # Return to pandas series
     x_train = pd.Series(np.squeeze(x_train))
@@ -126,8 +127,7 @@ def train():
     print("Confusion matrix:")
     metrics.confusion_matrix(y_test, predicted)
 
-    print(metrics.classification_report(y_test, predicted,
-        target_names=["positive", "neutral", "negative"]))
+    print(metrics.classification_report(y_test, predicted, target_names=["positive", "neutral", "negative"]))
 
     # Save the classifier
     #joblib.dump(clf, 'sentiment_classifier.pkl')

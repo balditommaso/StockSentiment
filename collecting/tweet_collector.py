@@ -17,7 +17,7 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
     tweets_list = []
 
     for i, tweet in enumerate(
-            sntwitter.TwitterSearchScraper(keyword + ' since:' + start_date + ' until:' + end_date).get_items()):
+            sntwitter.TwitterSearchScraper(keyword + ' since_time:' + start_date + ' until_time:' + end_date).get_items()):
 
         #counter
         print(i, " ", tweet.date)

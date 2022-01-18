@@ -1,5 +1,5 @@
 import json
-
+import time
 import dash
 from dash import dcc
 from dash import html
@@ -131,11 +131,8 @@ def show_tweets(ticker):
     keyword = keyword + " " + ticker
 
     # select the period
-    start_date = (datetime.now() - relativedelta(hours=6)).strftime('%Y-%m-%d %H:%m:%S')
-    print(start_date)
-    end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%m:%S')
-
-    end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%m:%S')
+    start_date = (datetime.now() - relativedelta(hours=3)).strftime('%s')
+    end_date = datetime.now().strftime('%s')
 
     target_file = get_tweets(start_date, end_date, keyword, ticker, "data")
     target_tweets = []
