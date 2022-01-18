@@ -19,7 +19,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
 app.layout = html.Div([
     # update stocks data if needed
-    update_stocks(),
+    update_stocks('update'),
     html.Div(
         id="container",
         children=[
@@ -129,17 +129,16 @@ def make_prediction(ticker):
     keyword = keyword + " " + ticker
 
     # select the period
-    today = datetime.now()
-    start_date = today.strftime('%Y-%m-%d')
+    start_date = datetime.now().strftime('%Y-%m-%d')
+    end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d')
 
-
-    print(keyword, today)
-    get_tweets(start_date, end_date, keyword, ticker, "data")
-    # filter_tweets(path)
+    target_file = get_tweets(start_date, end_date, keyword, ticker, "data")
+    filter_tweets(target_file)
     # add the weigth
 #
     # target_stocks = pd.read_json(("data/tweet" + ticker + ".json"), lines=True)
     # print(target_stocks.head())
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)

@@ -37,13 +37,14 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
     with open(fname, 'w') as f:
         print("Saved Json: ", fname)
         tweets_df.to_json(fname, orient="records", lines=True)
+    return fname
 
 
 if __name__ == "__main__":
     start_date = "2021-01-18"
     end_date = "2022-01-18"
-    keyword = "amazon AMZN"  # edo fai amazon
-    ticker = 'AMZN'
+    keyword = "tesla TSLA"
+    ticker = 'TSLA'
     dir_path = '../data'
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     get_tweets(start_date, end_date, keyword, ticker, dir_path)
