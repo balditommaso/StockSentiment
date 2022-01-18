@@ -26,7 +26,7 @@ def update_stocks(arg):
         ticker = yf.Ticker(company['ticker'])
         hist = ticker.history(start=start_date, end=end_date)
         hist.reset_index(inplace=True)
-        hist.drop(columns=['High', 'Low'], inplace=True)
+        # hist.drop(columns=['High', 'Low'], inplace=True)
         with open(fname, mode=mode, encoding='utf-8') as stocks_json:
             hist.to_json(path_or_buf=stocks_json, orient='records', lines=True, index=True, date_format='iso')
 

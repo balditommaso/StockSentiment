@@ -1,3 +1,5 @@
+import json
+
 import dash
 from dash import dcc
 from dash import html
@@ -117,7 +119,7 @@ def show_stock_graph(ticker, period):
     Output('tweets-view', 'children'),
     Input("select-stock", "value")
 )
-def make_prediction(ticker):
+def show_tweets(ticker):
     # validate the ticker selected
     if ticker is None:
         return
@@ -129,16 +131,32 @@ def make_prediction(ticker):
     keyword = keyword + " " + ticker
 
     # select the period
-    start_date = datetime.now().strftime('%Y-%m-%d')
-    end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d')
+    start_date = (datetime.now() - relativedelta(hours=6)).strftime('%Y-%m-%d %H:%m:%S')
+    print(start_date)
+    end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%m:%S')
+
+    end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%m:%S')
 
     target_file = get_tweets(start_date, end_date, keyword, ticker, "data")
-    filter_tweets(target_file)
+    target_tweets = []
+    with open(target_file, mode='r') as tweets_file:
+        for line in tweets_file:
+            tweet = json.loads(line)
+            div = html.Div(
+                children=[
+                    html.Cite("@" + tweet["Account_Name"]),
+                    html.P(tweet["Text"])
+                ],
+                style={"border-bottom": "solid grey 2px"}
+            )
+            target_tweets.append(div)
+
+    # filter_tweets(target_file)
     # add the weigth
 #
     # target_stocks = pd.read_json(("data/tweet" + ticker + ".json"), lines=True)
     # print(target_stocks.head())
-
+    return target_tweets
 
 if __name__ == '__main__':
     app.run_server(debug=True)
