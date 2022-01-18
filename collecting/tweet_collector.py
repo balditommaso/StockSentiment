@@ -42,8 +42,8 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
 if __name__ == "__main__":
     start_date = "2021-01-18"
     end_date = "2022-01-18"
-    keyword = "tesla TSLA"  # edo fai amazon
-    ticker = 'TSLA'
+    keyword = "amazon AMZN"  # edo fai amazon
+    ticker = 'AMZN'
     dir_path = '../data'
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     get_tweets(start_date, end_date, keyword, ticker, dir_path)
