@@ -22,16 +22,17 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
         #counter
         print(i, " ", tweet.date)
 
-       # if tweet.likeCount > tot   ### filter unpopular tweets
-        tweets_list.append([tweet.id, tweet.url, tweet.user.username, tweet.content, tweet.date, tweet.retweetCount,
-                            tweet.likeCount, tweet.replyCount])
+        # if tweet.likeCount > tot   ### filter unpopular tweets
+        tweets_list.append([tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date,
+                            tweet.retweetCount, tweet.likeCount, tweet.replyCount])
 
     # Creating a dataframe from the tweets list above
-    tweets_df = pd.DataFrame(tweets_list, columns=['Tweet_ID', 'URL', "Account_Name", 'Text', 'Datetime',
+    tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime',
                                                    'Number_Retweets', 'Number_Likes', 'Number_Comments'])
     print(tweets_df)
 
     fname = join(dir_path, 'tweets_' + ticker + '_' + start_date + '_' + end_date + '.json')
+
 
     with open(fname, 'w') as f:
         print("Saved Json: ", fname)
@@ -39,10 +40,10 @@ def get_tweets(start_date, end_date, keyword, ticker, dir_path):
 
 
 if __name__ == "__main__":
-    start_date = "2021-12-06"
-    end_date = "2021-12-09"
-    keyword = "amazon AMZN"
-    ticker = 'AMZN'
+    start_date = "2021-01-18"
+    end_date = "2022-01-18"
+    keyword = "tesla TSLA"  # edo fai amazon
+    ticker = 'TSLA'
     dir_path = '../data'
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     get_tweets(start_date, end_date, keyword, ticker, dir_path)

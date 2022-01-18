@@ -9,13 +9,17 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 import common.costants as const
+from Preprocessing.textCleaner import filter_tweets
 from collecting.stocks_collector import update_stocks
+from collecting.tweet_collector import get_tweets
 
 stylesheet = ['./assets/style.css']
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
 app.layout = html.Div([
+    # update stocks data if needed
+    update_stocks(),
     html.Div(
         id="container",
         children=[
@@ -36,10 +40,6 @@ app.layout = html.Div([
                         options=[{'label': i['name'], 'value': i['ticker']} for i in const.target_company],
                         value=None
                     ),
-                    html.Button(
-                        "Predict",
-                        id='predict'
-                    )
                 ]
             ),
             html.Div(
@@ -87,18 +87,20 @@ def show_stock_graph(ticker, period):
     today = datetime.now()
     end_date = today.strftime('%Y-%m-%d')
     if period == 0:
-        start_date = (today - relativedelta(years=1)).strftime('%Y-%m-%d')
+        start_date = (today - relativedelta(years=1))
     elif period == 2.5:
-        start_date = (today - relativedelta(months=9)).strftime('%Y-%m-%d')
+        start_date = (today - relativedelta(months=9))
     elif period == 5:
-        start_date = (today - relativedelta(months=6)).strftime('%Y-%m-%d')
+        start_date = (today - relativedelta(months=6))
     elif period == 7.5:
-        start_date = (today - relativedelta(months=3)).strftime('%Y-%m-%d')
+        start_date = (today - relativedelta(months=3))
     elif period == 9:
-        start_date = (today - relativedelta(months=1)).strftime('%Y-%m-%d')
+        start_date = (today - relativedelta(months=1))
     elif period == 10:
-        start_date = (today - relativedelta(weeks=1)).strftime('%Y-%m-%d')
-    print(end_date)
+        start_date = (today - relativedelta(weeks=1))
+    start_date = start_date.strftime('%Y-%m-%d')
+
+    # take the data from the correct file
     file_name = "data/historical_data/" + str(ticker) + ".json"
     target_stocks = pd.read_json(file_name, lines=True)
     target_stocks = target_stocks.set_index(['Date'])
@@ -110,10 +112,35 @@ def show_stock_graph(ticker, period):
                   render_mode="svg")
     return fig
 
-# load tweets of the day
 
+@app.callback(
+    Output('tweets-view', 'children'),
+    Input("select-stock", "value")
+)
+def make_prediction(ticker):
+    # validate the ticker selected
+    if ticker is None:
+        return
+
+    # company parameter
+    for company in const.target_company:
+        if company['ticker'] == ticker:
+            keyword = company['name']
+    keyword = keyword + " " + ticker
+
+    # select the period
+    today = datetime.now()
+    start_date = today.strftime('%Y-%m-%d')
+
+
+    print(keyword, today)
+    get_tweets(start_date, end_date, keyword, ticker, "data")
+    # filter_tweets(path)
+    # add the weigth
+#
+    # target_stocks = pd.read_json(("data/tweet" + ticker + ".json"), lines=True)
+    # print(target_stocks.head())
 
 if __name__ == '__main__':
-    update_stocks()
     app.run_server(debug=True)
 
