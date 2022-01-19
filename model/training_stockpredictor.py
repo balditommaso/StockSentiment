@@ -95,7 +95,7 @@ def evaluate_performance(real, pred, date_test):
 
 def prepare_stock_data(stock):
     df = pd.read_json('../data/historical_data/' + stock + '.json', lines=True)
-    df1 = pd.read_json('../data/historical_data/S&P500.json', lines=True)
+    df1 = pd.read_json('../data/historical_data/SPY.json', lines=True)
 
     # Rename columns
     df = df.rename(columns={'Open': 'Stock Open', 'Close': 'Stock Close'})

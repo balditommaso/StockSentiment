@@ -7,6 +7,7 @@ from common.costants import target_company
 
 
 def update_stocks(arg):
+    target_company.append({'name': "S&P 500", 'ticker': "SPY"})
     for company in target_company:
         fname = "data/historical_data/" + company['ticker'] + ".json"
         if arg == 'init':
