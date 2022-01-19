@@ -6,6 +6,7 @@ import re
 
 def select_only_keyword(df, keyword, ticker):
     """
+    to remove tweets where the keyword is in the username only
     Remove rows where the text do not contain the keyword
     :param df:
     :param keyword:
@@ -15,8 +16,8 @@ def select_only_keyword(df, keyword, ticker):
     print("Removing text without keyword or ticker ...")
 
     for index, row in df.iterrows():
-        find_keyword = row['Text'].find(keyword)
-        find_ticker = row['Text'].find(ticker)
+        find_keyword = row['text'].find(keyword)
+        find_ticker = row['text'].find(ticker)
         if find_keyword == -1 and find_ticker == -1:
             df.drop(index, inplace=True)
             print(f'Line {index} dropped')
@@ -33,7 +34,7 @@ def select_only_english(df):
 
     for index, row in df.iterrows():
         try:
-            if detect(row['Text']) != 'en':
+            if detect(row['text']) != 'en':
                 df.drop(index, inplace=True)
                 print(f'Line {index} dropped')
         except:
@@ -100,7 +101,7 @@ def save_file(ticker, df):
         df.to_json(fname, orient="records", lines=True)
 
 
-def filter_tweets(path):
+def filter_tweets(df):
     """
     filter all the JSON files given by path and save a new files with the
     results
@@ -126,11 +127,12 @@ def filter_tweets(path):
     # remove special char
     df['Text'] = df['Text'].apply(remove_special_char)
     # save results on file
-    save_file(ticker, df)
+    #save_file(ticker, df)
 
 
 # TEST
 if __name__ == "__main__":
-    filter_tweets("../data/tweets/tweets_AMZN_2021-12-06_2021-12-09.json")
+    index = ''
+    # filter_tweets("../data/tweets/tweets_AMZN_2021-12-06_2021-12-09.json")
 
 

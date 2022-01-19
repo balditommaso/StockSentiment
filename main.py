@@ -11,7 +11,7 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 import common.costants as const
-from Preprocessing.textCleaner import filter_tweets
+from preprocessing.textCleaner import filter_tweets
 from collecting.stocks_collector import update_stocks
 from collecting.tweet_collector import get_tweets
 
