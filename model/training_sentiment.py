@@ -1,21 +1,12 @@
 from collections import Counter
-
-import joblib
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from imblearn.datasets import make_imbalance
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from sklearn.utils import resample
 from xgboost import XGBClassifier
-
 from sklearn.pipeline import Pipeline
 import re
 from langdetect import detect
