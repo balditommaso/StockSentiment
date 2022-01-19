@@ -69,7 +69,7 @@ def select_only_english(df):
 
 
 def train():
-    df = pd.read_csv('tweets_with_sentiment.csv')
+    df = pd.read_csv('data/tweets_with_sentiment.csv')
     df['text'] = df['text'].astype(str)
 
     #Code for data preprocessing
