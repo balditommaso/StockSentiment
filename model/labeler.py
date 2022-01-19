@@ -10,7 +10,7 @@ def ask_label(text):
     elif label == "neu":
         label = "neutral"
     elif label != "stop":
-        ask_label()
+        ask_label(text)
     return label
 
 
