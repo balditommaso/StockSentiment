@@ -20,7 +20,6 @@ def select_only_keyword(df, keyword, ticker):
         find_ticker = row['text'].find(ticker)
         if find_keyword == -1 and find_ticker == -1:
             df.drop(index, inplace=True)
-            print(f'Line {index} dropped')
     return df
 
 
@@ -36,10 +35,8 @@ def select_only_english(df):
         try:
             if detect(row['text']) != 'en':
                 df.drop(index, inplace=True)
-                print(f'Line {index} dropped')
         except:
             df.drop(index, inplace=True)
-            print(f'Line {index} dropped')
     return df
 
 
