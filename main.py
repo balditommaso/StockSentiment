@@ -1,6 +1,8 @@
 import json
 import time
 import dash
+import joblib
+import numpy as np
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
@@ -11,7 +13,7 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 import common.costants as const
-from preprocessing.textCleaner import filter_tweets
+from preprocessing.textCleaner import filter_tweets, select_only_keyword, select_only_english, remove_special_char
 from collecting.stocks_collector import update_stocks
 from collecting.tweet_collector import get_tweets
 
@@ -109,7 +111,7 @@ def show_stock_graph(ticker, period):
     target_stocks = target_stocks.loc[start_date : end_date]
     fig = px.line(target_stocks,
                   x=target_stocks.index,
-                  y="Open",
+                  y="Close",
                   title=ticker,
                   render_mode="svg")
     return fig
@@ -131,7 +133,7 @@ def show_tweets(ticker):
     keyword = keyword + " " + ticker
 
     # select the period
-    start_date = (datetime.now() - relativedelta(hours=3)).strftime('%s')
+    start_date = (datetime.now() - relativedelta(hours=24)).strftime('%s')
     end_date = datetime.now().strftime('%s')
 
     target_file = get_tweets(start_date, end_date, keyword, ticker, "data")
@@ -147,6 +149,25 @@ def show_tweets(ticker):
                 style={"border-bottom": "solid grey 2px"}
             )
             target_tweets.append(div)
+            clf = joblib.load('model/sentiment_classifier.pkl')
+            print('model downloaded\n')
+            tweet['Text'] = tweet['Text'].str.lower()
+            print('model downloaded\n')
+            tweet = select_only_english(tweet)
+            print('model downloaded\n')
+            tweet['Text'] = tweet['Text'].apply(remove_special_char)
+            print('filtering...')
+            mylist = [tweet["Text"]]
+            arr = np.asarray(mylist)
+            arr.reshape(-1, 1)
+            predicted = clf.predict(arr)
+            print("\n\n" + tweet['Text'] + "\n" + predicted)
+
+
+
+
+    # Predicting
+
 
     # filter_tweets(target_file)
     # add the weigth
