@@ -21,10 +21,12 @@ stylesheet = ['./assets/style.css']
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
+market_status = 'Open'
+
 app.layout = html.Div([
     # create a loading page
     update_stocks('update'),
-    get_tweets('update'),
+    # get_tweets('update'),
     html.Div(
         id="container",
         children=[
@@ -34,6 +36,15 @@ app.layout = html.Div([
                     html.Div('Stock Value Predictor', className="title"),
                     html.Label("your best friend for investments")
                 ]
+            ),
+            dcc.Interval(
+                id='update-time',
+                interval=1000,
+                n_intervals=0
+            ),
+            html.Div(
+                id='market-view',
+                children=[]
             ),
             html.Hr(),
             html.Div(
@@ -78,6 +89,24 @@ app.layout = html.Div([
         ]
     )
 ])
+
+@app.callback(
+    Output('market-view', 'children'),
+    Input('update-time', 'n_intervals')
+)
+def update_market(n):
+    today = datetime.today()
+    if (today.hour <= 9 and today.minute < 30) or (today.hour > 16):
+        global market_status
+        market_status = 'Close'
+    else:
+        market_status = 'Open'
+    return [
+        html.Label("Market " + market_status, style={'font-size': '28px', 'margin-right': '5px'}),
+        html.Span(today.strftime('%Y-%m-%d'), style={'font-size': '26px', 'text-align': 'right'}),
+        html.Span(today.strftime('%H:%M:%S'), style={'font-size': '16px', 'opacity': '0.8'}),
+    ]
+
 
 @app.callback(
     Output("graph-view", "figure"),
