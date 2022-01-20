@@ -15,7 +15,7 @@ from dateutil.relativedelta import relativedelta
 import common.costants as const
 from preprocessing.textCleaner import filter_tweets, select_only_keyword, select_only_english, remove_special_char
 from collecting.stocks_collector import update_stocks
-from collecting.tweet_collector import get_tweets
+from collecting.tweet_collector import update_tweets, get_tweets
 
 stylesheet = ['./assets/style.css']
 
@@ -24,6 +24,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.layout = html.Div([
     # update stocks data if needed
     update_stocks('update'),
+    update_tweets(),
     html.Div(
         id="container",
         children=[
@@ -122,6 +123,7 @@ def show_stock_graph(ticker, period):
     Input("select-stock", "value")
 )
 def show_tweets(ticker):
+
     # validate the ticker selected
     if ticker is None:
         return
@@ -133,8 +135,8 @@ def show_tweets(ticker):
     keyword = keyword + " " + ticker
 
     # select the period
-    start_date = (datetime.now() - relativedelta(hours=24)).strftime('%s')
-    end_date = datetime.now().strftime('%s')
+    start_date = str(int((datetime.now() - relativedelta(hours=24)).timestamp()))
+    end_date = str(int(datetime.now().timestamp()))
 
     target_file = get_tweets(start_date, end_date, keyword, ticker, "data")
     target_tweets = []
@@ -151,7 +153,7 @@ def show_tweets(ticker):
             target_tweets.append(div)
             clf = joblib.load('model/sentiment_classifier.pkl')
             print('model downloaded\n')
-            tweet['Text'] = tweet['Text'].str.lower()
+            tweet['Text'] = tweet['Text'].lower()
             print('model downloaded\n')
             tweet = select_only_english(tweet)
             print('model downloaded\n')
