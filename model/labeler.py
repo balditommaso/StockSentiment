@@ -38,7 +38,7 @@ if __name__ == "__main__":
             with open("../data/train/tweets_with_label.json") as feedsjson:
                 feeds = json.load(feedsjson)
                 skip = len(feeds)
-                with open("../data/tweets/tweets_AMZN_2021-01-18_2022-01-18.json") as file:
+                with open("../data/tweets/tweets_AMZN.json") as file:
                     for line in file:
                         if skip > 0:
                             skip = skip - 1

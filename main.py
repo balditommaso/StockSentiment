@@ -13,18 +13,18 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 import common.costants as const
-from preprocessing.textCleaner import filter_tweets, select_only_keyword, select_only_english, remove_special_char
+from preprocessing.tweet_cleaner import filter_tweets, select_only_keyword, select_only_english, remove_special_char
 from collecting.stocks_collector import update_stocks
-from collecting.tweet_collector import update_tweets, get_tweets
+from collecting.tweet_collector import get_tweets
 
 stylesheet = ['./assets/style.css']
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
 app.layout = html.Div([
-    # update stocks data if needed
+    # create a loading page
     update_stocks('update'),
-    update_tweets(),
+    get_tweets('update'),
     html.Div(
         id="container",
         children=[
@@ -123,47 +123,44 @@ def show_stock_graph(ticker, period):
     Input("select-stock", "value")
 )
 def show_tweets(ticker):
-
     # validate the ticker selected
     if ticker is None:
         return
-
-    # company parameter
-    for company in const.target_company:
-        if company['ticker'] == ticker:
-            keyword = company['name']
-    keyword = keyword + " " + ticker
-
-    # select the period
-    start_date = str(int((datetime.now() - relativedelta(hours=24)).timestamp()))
-    end_date = str(int(datetime.now().timestamp()))
-
-    target_file = get_tweets(start_date, end_date, keyword, ticker, "data")
-    target_tweets = []
-    with open(target_file, mode='r') as tweets_file:
-        for line in tweets_file:
-            tweet = json.loads(line)
-            div = html.Div(
-                children=[
-                    html.Cite("@" + tweet["Account_Name"]),
-                    html.P(tweet["Text"])
-                ],
-                style={"border-bottom": "solid grey 2px"}
-            )
-            target_tweets.append(div)
-            clf = joblib.load('model/sentiment_classifier.pkl')
-            print('model downloaded\n')
-            tweet['Text'] = tweet['Text'].lower()
-            print('model downloaded\n')
-            tweet = select_only_english(tweet)
-            print('model downloaded\n')
-            tweet['Text'] = tweet['Text'].apply(remove_special_char)
-            print('filtering...')
-            mylist = [tweet["Text"]]
-            arr = np.asarray(mylist)
-            arr.reshape(-1, 1)
-            predicted = clf.predict(arr)
-            print("\n\n" + tweet['Text'] + "\n" + predicted)
+    # search new tweets
+    get_tweets('update')
+    fname = 'data/tweets/tweets_' + ticker + '.json'
+    with open(fname, mode='r') as file:
+        raw_tweets = pd.read_json(path_or_buf=file, orient='records', lines=True)
+    raw_tweets = raw_tweets.set_index(['Date'])
+    today = datetime.now()
+    start_date = datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, second=0).timestamp()
+    end_date = datetime(year=today.year, month=today.month, day=today.day,
+                        hour=today.hour, minute=today.minute, second=today.second).timestamp()
+    new_tweets = raw_tweets.loc[start_date : end_date]
+    print(new_tweets)
+    # for line in new_tweets:
+    #     tweet = json.loads(line)
+    #     div = html.Div(
+    #         children=[
+    #             html.Cite("@" + tweet["Account_Name"]),
+    #             html.P(tweet["Text"])
+    #         ],
+    #         style={"border-bottom": "solid grey 2px"}
+    #     )
+    # target_tweets.append(div)
+    # clf = joblib.load('model/sentiment_classifier.pkl')
+    # print('model downloaded\n')
+    # tweet['Text'] = tweet['Text'].lower()
+    # print('model downloaded\n')
+    # tweet = select_only_english(tweet)
+    # print('model downloaded\n')
+    # tweet['Text'] = tweet['Text'].apply(remove_special_char)
+    # print('filtering...')
+    # mylist = [tweet["Text"]]
+    # arr = np.asarray(mylist)
+    # arr.reshape(-1, 1)
+    # predicted = clf.predict(arr)
+    # print("\n\n" + tweet['Text'] + "\n" + predicted)
 
 
 
