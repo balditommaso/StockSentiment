@@ -28,6 +28,13 @@ hr {
 	overflow: hidden;
 }
 
+.positive {
+    background-color: lightgreen;
+}
+
+.negative {
+    background-color: lightcoral;
+}
 /*------------------------COMPONENTS-----------------------------*/
 
 .app-header{
@@ -54,32 +61,21 @@ hr {
     line-height: 40px;
 }
 
-.set-option {
-    grid-column: 2/12;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    column-gap: 20px;
-    grid-auto-rows: 60px;
-}
 #select-stock{
-    grid-column: 2/3;
+    grid-column: 2/4;
 }
-/*
-#predict {
-    border-radius: 12px;
-    width: 80%;
-    border: 0;
-    grid-column: 4/5;
+
+#market-index{
+    grid-column: 4/9;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-items: center;
+    align-items: center;
+}
+#market-index * {
+    font-size: 25px;
     font-weight: bold;
-    font-size: 22px;
 }
-#predict:hover {
-    cursor: pointer;
-    background-color: blueviolet;
-}
-
- */
-
 
 #stocks-view {
     grid-column: 2/9;
@@ -89,16 +85,19 @@ hr {
 
 #tweets-view {
     grid-column: 9/12;
-    grid-row: 4/10;
+    grid-row: 3/10;
     display: grid;
-    grid-auto-flow: row;
-    grid-auto-rows: auto;
-    grid-template-columns: unset;
-    grid-template-rows: unset;
+    grid-template-columns: 1fr;
+    align-items: start;
+    justify-items: center;
     background-color: lightgoldenrodyellow;
     border-radius: 12px;
-    padding: 10px;
-    position: relative;
+    height: 100%;
+    max-height: 80vh;
+    overflow: auto;
+}
+
+#load-tweets {
     overflow-y: scroll;
 }
 

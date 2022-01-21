@@ -72,4 +72,4 @@ def download_tweet(ticker, name, start_date, end_date):
 
 # TEST
 if __name__ == "__main__":
-    update_tweets('init')  # could take hours
+    update_tweets('init')
