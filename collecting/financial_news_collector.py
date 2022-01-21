@@ -8,9 +8,15 @@ from dateutil.relativedelta import relativedelta
 import time
 from pathlib import Path
 
+from common.costants import target_company
+
+# Load environment variables
 load_dotenv()
 
-def get_finhub_news(start_date, end_date, tickers, dir_path):
+# Initialize API attributes
+finhub_key = os.environ['FINHUB_KEY']
+
+def get_finhub_news(ticker, start_date, end_date):
     """
     Method that uses FINHUB API for retrieving all the news published between start_date and end_date of all the tickers
     specified in tickers and saves the information in .json in dir_path
@@ -22,66 +28,74 @@ def get_finhub_news(start_date, end_date, tickers, dir_path):
     :param dir_path: string
         Path where the .json file will be saved
     """
-
-    # Date tests
-    if datetime.strptime(start_date, "%Y-%m-%d") > datetime.strptime(end_date, "%Y-%m-%d"):
-        print("'start_date' is after 'end_date'")
-        return -1
-
-    if datetime.strptime(start_date, "%Y-%m-%d") <= (datetime.now() - relativedelta(years=1)):
-        print("'start_date' is older than 1 year. It doesn't work with the free version of FinHub")
-        return -1
-
-    # Initialize API attributes
+    print("Updating  ", ticker, " news ...")
     max_call = 60
     time_sleep = 60
     nb_request = 0
-    finhub_key = os.environ['FINHUB_KEY']
 
-    for ticker in tickers:
-        print("Processing ", ticker)
-        news = pd.DataFrame(columns=['ticker', 'datetime', 'headline', 'source', 'summary'])
+    news = pd.DataFrame(columns=['Ticker', 'Date', 'Headline', 'Source', 'Summary', ' Url'])
 
-        # Number of days between start_date and end_date
-        delta_date = abs((datetime.strptime(start_date, "%Y-%m-%d") - datetime.strptime(end_date, "%Y-%m-%d")).days)
+    # Number of days between start_date and end_date
+    delta_date = abs((datetime.strptime(start_date, "%Y-%m-%d") - datetime.strptime(end_date, "%Y-%m-%d")).days)
+    date = start_date
+    date_obj = datetime.strptime(start_date, "%Y-%m-%d")
 
-        date = start_date
-        date_obj = datetime.strptime(start_date, "%Y-%m-%d")
-
-        data = []
-        for item in range(delta_date + 1):
-            print("Processing ", date)
-            nb_request += 1
-            r = requests.get('https://finnhub.io/api/v1/company-news?symbol=' + ticker + '&from=' + date + '&to=' + date
+    data = []
+    for item in range(delta_date + 1):
+        nb_request += 1
+        r = requests.get('https://finnhub.io/api/v1/company-news?symbol=' + ticker + '&from=' + date + '&to=' + date
                              + '&token=' + finhub_key)
-            data += r.json()
-            date_obj = date_obj + relativedelta(days=1)
-            date = date_obj.strftime("%Y-%m-%d")
-            if nb_request == (max_call - 1):
-                time.sleep(time_sleep)
-                nb_request = 0
+        data += r.json()
+        date_obj = date_obj + relativedelta(days=1)
+        date = date_obj.strftime("%Y-%m-%d")
+        if nb_request == (max_call - 1):
+            time.sleep(time_sleep)
+            nb_request = 0
 
-        for result in data:
-            contents = {'ticker' : result['related'],
-                        'datetime': result['datetime'],
-                        'headline': result['headline'],
-                        'source': result['source'],
-                        'summary': result['summary']
-                        }
-            news = news.append(contents, ignore_index=True)
+    for result in data:
+        contents = {'Ticker' : result['related'],
+                    'Date': result['datetime'],
+                    'Headline': result['headline'],
+                    'Source': result['source'],
+                    'Summary': result['summary'],
+                    'Url': result['url']
+                    }
+        news = news.append(contents, ignore_index=True)
 
-        fname = join(dir_path, 'news_' + ticker + '_' + start_date + '_' + end_date + '.json')
+    return news
 
-        with open(fname, 'w') as f:
-            print("Saved Json: ", fname)
-            news.to_json(fname, orient="records", lines=True)
+def update_news(arg):
+
+    for company in target_company:
+        fname = "../data/news/news_" + company['ticker'] + ".json"
+
+        if arg == 'init':
+            start_date = "2022-01-10"
+            end_date = "2022-01-18"
+            mode = 'w'
+
+        elif arg == 'update':
+            end_date = datetime.now().strftime('%Y-%m-%d')
+
+            # Retrieve the date of the last update
+            with open(fname, mode='r') as saved_news:
+                df = pd.read_json(path_or_buf=saved_news, orient='records', lines=True)
+
+            last_insert = df['Date'].iloc[-1]
+            start_date = last_insert.strftime('%Y-%m-%d')
+            mode = 'a'
+
+        news_df = get_finhub_news(company['ticker'], start_date, end_date)
+
+        # Drop today news that are already in the file
+        if arg == 'update':
+            news_df = news_df[news_df['Date'] < last_insert.timestamp()]
+
+        if news_df.shape[0] != 0:  # Faster than DataFrame.empty
+            with open(fname, mode=mode, encoding='utf-8') as news_json:
+                news_df.to_json(path_or_buf=news_json, orient='records', lines=True, index=True, date_format='iso')
 
 
 if __name__ == "__main__":
-    start_date = "2020-12-06"
-    end_date = "2021-12-04"
-    #tickers = get_S&P500_tickers.get_tickers()
-    tickers = ['AMZN']
-    dir_path = '../data'
-    Path(dir_path).mkdir(parents=True, exist_ok=True)
-    get_finhub_news(start_date, end_date, tickers, dir_path)
+    #update_news('init')
+    update_news('update')
