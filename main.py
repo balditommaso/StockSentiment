@@ -13,9 +13,10 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 import common.costants as const
-from preprocessing.tweet_cleaner import filter_tweets, select_only_keyword, select_only_english, remove_special_char
 from collecting.stocks_collector import update_stocks
-from collecting.tweet_collector import get_tweets
+from collecting.tweet_collector import update_tweets
+from preprocessing.tweet_cleaner import filter_tweets
+from preprocessing.tweet_weight import set_tweets_weight
 
 stylesheet = ['./assets/style.css']
 
@@ -23,10 +24,13 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
 market_status = 'Open'
 
+# start-up functions
+update_stocks('update')     # NOTE: should update only if it's the first time of the day
+update_tweets('init')
+
 app.layout = html.Div([
     # create a loading page
-    update_stocks('update'),
-    # get_tweets('update'),
+
     html.Div(
         id="container",
         children=[
@@ -104,7 +108,7 @@ def update_market(n):
     return [
         html.Label("Market " + market_status, style={'font-size': '28px', 'margin-right': '5px'}),
         html.Span(today.strftime('%Y-%m-%d'), style={'font-size': '26px', 'text-align': 'right'}),
-        html.Span(today.strftime('%H:%M:%S'), style={'font-size': '16px', 'opacity': '0.8'}),
+        html.Span(today.strftime('%H:%M:%S'), style={'font-size': '22px', 'opacity': '0.8'}),
     ]
 
 
@@ -153,56 +157,41 @@ def show_stock_graph(ticker, period):
 )
 def show_tweets(ticker):
     # validate the ticker selected
-    if ticker is None:
+    if ticker is None or ticker == 'SPY':
         return
     # search new tweets
-    get_tweets('update')
+    update_tweets(ticker)
     fname = 'data/tweets/tweets_' + ticker + '.json'
     with open(fname, mode='r') as file:
         raw_tweets = pd.read_json(path_or_buf=file, orient='records', lines=True)
-    raw_tweets = raw_tweets.set_index(['Date'])
-    today = datetime.now()
-    start_date = datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, second=0).timestamp()
-    end_date = datetime(year=today.year, month=today.month, day=today.day,
-                        hour=today.hour, minute=today.minute, second=today.second).timestamp()
-    new_tweets = raw_tweets.loc[start_date : end_date]
-    print(new_tweets)
-    # for line in new_tweets:
-    #     tweet = json.loads(line)
-    #     div = html.Div(
-    #         children=[
-    #             html.Cite("@" + tweet["Account_Name"]),
-    #             html.P(tweet["Text"])
-    #         ],
-    #         style={"border-bottom": "solid grey 2px"}
-    #     )
-    # target_tweets.append(div)
-    # clf = joblib.load('model/sentiment_classifier.pkl')
-    # print('model downloaded\n')
-    # tweet['Text'] = tweet['Text'].lower()
-    # print('model downloaded\n')
-    # tweet = select_only_english(tweet)
-    # print('model downloaded\n')
-    # tweet['Text'] = tweet['Text'].apply(remove_special_char)
-    # print('filtering...')
-    # mylist = [tweet["Text"]]
-    # arr = np.asarray(mylist)
-    # arr.reshape(-1, 1)
-    # predicted = clf.predict(arr)
-    # print("\n\n" + tweet['Text'] + "\n" + predicted)
 
+    pd.options.display.max_columns = None
+    print(raw_tweets)
+    clean_tweets = filter_tweets(raw_tweets, ticker)
+    print(clean_tweets)
+    weighted_tweets = set_tweets_weight(clean_tweets)
+    print(weighted_tweets)
+    # elaborate polarity
+    clf = joblib.load('model/sentiment_classifier.pkl')
+    prediction = clf.predict(weighted_tweets["Text"].values)
+    weighted_tweets['Polarity'] = prediction
+    print(weighted_tweets)
 
+    children = []
+    for index, tweet in weighted_tweets.iterrows():
+        div = html.Div(
+            children=[
+                html.Cite("@" + tweet["Account_Name"]),
+                html.P(tweet["Text"]),
+                html.P(tweet['Polarity'] + " - " + str(tweet['Weight']))
+            ],
+            style={
+                "border-bottom": "solid grey 2px",
+            }
+        )
+        children.append(div)
+    return children
 
-
-    # Predicting
-
-
-    # filter_tweets(target_file)
-    # add the weigth
-#
-    # target_stocks = pd.read_json(("data/tweet" + ticker + ".json"), lines=True)
-    # print(target_stocks.head())
-    return target_tweets
 
 if __name__ == '__main__':
     app.run_server(debug=True)

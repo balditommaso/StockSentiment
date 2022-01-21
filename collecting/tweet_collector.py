@@ -1,12 +1,14 @@
 # pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
 from datetime import datetime
+
+import pytz
 import snscrape.modules.twitter as sntwitter
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from common.costants import target_company
 
 
-def get_tweets(arg):
+def update_tweets(ticker):
     """
     :param start_date:
     :param end_date:
@@ -14,63 +16,60 @@ def get_tweets(arg):
     :param dir_path:
     :return:
     """
-    for company in target_company:
-        fname = "data/tweets/tweets_" + company['ticker'] + ".json"
-        # adapt the research
-        if arg == 'init':
-            fname = "../" + fname
-            start_date = str(int(datetime(2021, 1, 18).timestamp()))  # 2021-01-18
-            end_date = str(int(datetime(2022, 1, 18).timestamp()))    # 2022-01-18
-            mode = 'w'
-        elif arg == 'update':
-            end_date = str(int(datetime.now().timestamp()))
+    if ticker == 'init':
+        for company in target_company:
+            fname = "data/tweets/tweets_" + company['ticker'] + ".json"
             with open(fname, mode='r') as saved_tweets:
                 df = pd.read_json(path_or_buf=saved_tweets, orient='records', lines=True)
-            last_insert = df.head(1)['Datetime'].values[0]
-            start_date = pd.to_datetime(str(last_insert))
-            start_date = str(int((start_date + relativedelta(seconds=1)).timestamp()))
-            mode = 'a'
+            if df.size > 0:
+                df['Datetime'] = pd.to_datetime(df['Datetime'])
+                first_insert = df['Datetime'].min()
+                today = datetime.now()
+                # check if need to update
+                if today.year == first_insert.year and today.month == first_insert.month and today.day == first_insert.day:
+                    print(company['ticker'] + ' already updated')
+                    continue
 
-        tweets_list = []
-        print("Collecting tweets: " + company['ticker'] + "\n")
-        keyword = company['name'] + " " + company['ticker']
-        for i, tweet in enumerate(sntwitter.TwitterSearchScraper(keyword + ' since_time:' + start_date +
-                                                                 ' until_time:' + end_date).get_items()):
-            print("\t" + str(i), " ", tweet.date)
-            tweets_list.append([tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date,
-                                tweet.retweetCount, tweet.likeCount, tweet.replyCount])
+            start_date = str(int(datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=pytz.utc).timestamp()))
+            end_date = str(int(datetime.now().timestamp()))
+            print(start_date)
+            tweets = download_tweet(company['ticker'], company['name'], start_date, end_date)
+            with open(fname, mode='w') as f:
+                tweets.to_json(fname, orient="records", lines=True, date_format='iso')
+    else:
+        for company in target_company:
+            if ticker == company['ticker']:
+                name = company['name']
+        fname = "data/tweets/tweets_" + ticker + ".json"
+        with open(fname, mode='r') as saved_tweets:
+            df = pd.read_json(path_or_buf=saved_tweets, orient='records', lines=True)
+        df['Datetime'] = pd.to_datetime(df['Datetime'])
+        last_insert = df['Datetime'].max()
+        start_date = str(int((last_insert + relativedelta(seconds=1)).timestamp()))
+        end_date = str(int(datetime.now().timestamp()))
+        tweets = download_tweet(ticker, name, start_date, end_date)
+        if tweets.size > 0:
+            df.append(tweets)
+        # tweets = tweets.drop_duplicates(subset=['Datetime'], keep='last')
+        with open(fname, mode='w') as f:
+            df.to_json(fname, orient="records", lines=True, date_format='iso')
 
-        # Creating a dataframe from the tweets list above
-        tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime',
-                                                       'Number_Retweets', 'Number_Likes', 'Number_Comments'])
-        print("Finish. \n")
-        print(tweets_df)
 
-        with open(fname, mode) as f:
-            tweets_df.to_json(fname, orient="records", lines=True)
+def download_tweet(ticker, name, start_date, end_date):
+    tweets_list = []
+    print("Collecting tweets: " + ticker + "\n")
+    keyword = name + " " + ticker
+    for i, tweet in enumerate(sntwitter.TwitterSearchScraper(keyword + ' since_time:' + start_date +
+                                                             ' until_time:' + end_date).get_items()):
+        print("\t" + str(i), " ", tweet.date)
+        tweets_list.append([tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date])
+
+    # Creating a dataframe from the tweets list above
+    tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime'])
+    print("Finish. \n")
+    return tweets_df
 
 
-#def update_tweets(arg):
-#    if arg == 'update':
-#        for company in target_company:
-#            fname = "data/tweets/daily_tweets_" + company['ticker'] + ".json"
-#
-#            end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d')
-#            start_date = (datetime.now()).strftime('%Y-%m-%d')
-#
-#            fname = "../" + fname
-#
-#            try:
-#                with open(fname, mode='r') as daily_tweets:
-#                    df = pd.read_json(path_or_buf=daily_tweets, orient='records', lines=True)
-#                    print(df.tail(1))
-#                    start_date = df.tail(1)['timestamp']
-#
-#            except IOError:
-#                file = open(fname, 'w')
-#            get_tweets(start_date, end_date, company['name'], company['ticker'], "../data/tweets/")
-#
-#    return 0
-
+# TEST
 if __name__ == "__main__":
-    get_tweets('init')  # could take hours
+    update_tweets('init')  # could take hours

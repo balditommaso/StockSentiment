@@ -5,7 +5,7 @@ import re
 from common.costants import target_company
 
 
-def select_only_keyword(df, keyword, ticker):
+def tweet_pruning(df, keyword, ticker):
     """
     to remove tweets where the keyword is in the username only
     Remove rows where the text do not contain the keyword
@@ -17,18 +17,11 @@ def select_only_keyword(df, keyword, ticker):
     for index, row in df.iterrows():
         find_keyword = row['Text'].find(keyword)
         find_ticker = row['Text'].find(ticker)
+        # search keyword
         if find_keyword == -1 and find_ticker == -1:
             df.drop(index, inplace=True)
-    return df
-
-
-def select_only_english(df):
-    """
-    Method that drops all the rows containing non-english tweets
-    :param pd.DataFrame:
-    :return:
-    """
-    for index, row in df.iterrows():
+            continue
+        # select only english tweet
         try:
             if detect(row['Text']) != 'en':
                 df.drop(index, inplace=True)
@@ -85,8 +78,7 @@ def filter_tweets(tweets, ticker):
     # keep lowercase
     tweets['Text'] = tweets['Text'].str.lower()
     # remove noisy tweets
-    tweets = select_only_keyword(tweets, company_name, ticker)
-    tweets = select_only_english(tweets)
+    tweets = tweet_pruning(tweets, company_name, ticker)
     # remove special char
     tweets['Text'] = tweets['Text'].apply(remove_special_char)
     return tweets
@@ -97,8 +89,8 @@ if __name__ == "__main__":
     fname = '../data/TEST_FILTER.json'
     with open(fname, mode='r') as file:
         df = pd.read_json(path_or_buf=file, orient='records', lines=True)
-    print(df.head()['Text'])
-    clean_df = filter_tweets(df.head(), 'AMZN')
+    print(df['Text'])
+    clean_df = filter_tweets(df, 'AMZN')
     print(clean_df['Text'])
 
 
