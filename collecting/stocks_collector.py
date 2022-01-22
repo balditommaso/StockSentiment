@@ -7,9 +7,8 @@ from common.costants import target_company
 
 
 def update_stocks(arg):
-
     for company in target_company:
-        fname = "../data/historical_data/" + company['ticker'] + ".json"
+        fname = "data/historical_data/" + company['ticker'] + ".json"
         if arg == 'init':
             start_date = "2017-01-18"
             end_date = "2022-01-18"

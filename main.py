@@ -1,19 +1,15 @@
-import json
-import time
 import dash
 import joblib
-import numpy as np
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
-from datetime import date, datetime
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
-
 import common.costants as const
-from collecting.stocks_collector import update_stocks
+from collecting.stocks_collector import update_stocks, get_live_data
 from collecting.tweet_collector import update_tweets
 from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
@@ -51,16 +47,15 @@ app.layout = html.Div([
                 children=[]
             ),
             html.Hr(),
+            dcc.Dropdown(
+                id='select-stock',
+                placeholder='Select Stock',
+                options=[{'label': i['name'], 'value': i['ticker']} for i in const.target_company],
+                value=None
+            ),
             html.Div(
-                className="set-option",
-                children=[
-                    dcc.Dropdown(
-                        id='select-stock',
-                        placeholder='Select Stock',
-                        options=[{'label': i['name'], 'value': i['ticker']} for i in const.target_company],
-                        value=None
-                    ),
-                ]
+                id='market-index',
+                children=[]
             ),
             html.Div(
                 id='stocks-view',
@@ -84,15 +79,43 @@ app.layout = html.Div([
                 ]
             ),
             html.Div(
-                id="tweets-view",
-                className="list",
+                id='tweets-view',
                 children=[
-                    html.Label("Analyzed tweets:")
+                    html.Img(
+                        src='assets/image/twitter_logo.png',
+                        style={
+                            'width': '70px',
+                            'margin': '10px'
+                        }
+                    ),
+                    html.Div(
+                        id="load-tweets",
+                        className="list",
+                        children=[]
+                    )
                 ]
             )
         ]
     )
 ])
+
+@app.callback(
+    Output('market-index', 'children'),
+    [Input("select-stock", "value"), Input('update-time', 'n_intervals')]
+)
+def update_market_index(ticker, n):
+    if ticker is None:
+        return []
+    today = datetime.today()
+    actual_close, change, pct_change = get_live_data(ticker)
+    return [
+        html.P("Actual close: " + str(round(actual_close, 2))),
+        html.P(
+            str(round(change, 2)) + "(" + str(round(pct_change - 100, 2)) + "%)",
+            style={'color': 'red' if change < 0 else 'green'}
+        ),
+    ]
+
 
 @app.callback(
     Output('market-view', 'children'),
@@ -152,7 +175,7 @@ def show_stock_graph(ticker, period):
 
 
 @app.callback(
-    Output('tweets-view', 'children'),
+    Output('load-tweets', 'children'),
     Input("select-stock", "value")
 )
 def show_tweets(ticker):
@@ -164,30 +187,27 @@ def show_tweets(ticker):
     fname = 'data/tweets/tweets_' + ticker + '.json'
     with open(fname, mode='r') as file:
         raw_tweets = pd.read_json(path_or_buf=file, orient='records', lines=True)
-
+    # pre-processing
     pd.options.display.max_columns = None
-    print(raw_tweets)
     clean_tweets = filter_tweets(raw_tweets, ticker)
-    print(clean_tweets)
     weighted_tweets = set_tweets_weight(clean_tweets)
-    print(weighted_tweets)
     # elaborate polarity
     clf = joblib.load('model/sentiment_classifier.pkl')
     prediction = clf.predict(weighted_tweets["Text"].values)
     weighted_tweets['Polarity'] = prediction
-    print(weighted_tweets)
 
     children = []
     for index, tweet in weighted_tweets.iterrows():
         div = html.Div(
+            className=tweet['Polarity'],
+            style={
+                'padding': '5px',
+                'border-top': 'solid lightgray 2px'
+            },
             children=[
                 html.Cite("@" + tweet["Account_Name"]),
-                html.P(tweet["Text"]),
-                html.P(tweet['Polarity'] + " - " + str(tweet['Weight']))
+                html.P(tweet['Real_Text'])
             ],
-            style={
-                "border-bottom": "solid grey 2px",
-            }
         )
         children.append(div)
     return children

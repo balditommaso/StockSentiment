@@ -73,8 +73,7 @@ def filter_tweets(tweets, ticker):
         if company['ticker'] == ticker:
             company_name = company['name']
 
-    # use readable datetime format
-    tweets['Datetime'] = tweets['Datetime'].dt.strftime('%m-%d-%y')
+    tweets['Real_Text'] = tweets['Text']
     # keep lowercase
     tweets['Text'] = tweets['Text'].str.lower()
     # remove noisy tweets
