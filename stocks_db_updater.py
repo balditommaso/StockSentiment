@@ -12,19 +12,20 @@ from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
 
 
+
 class App(cmd.Cmd):
     intro = 'Stock Value Predictor Database updater'
     prompt = '>'
-    mongo_client = MongoClient('localhost', 27017)
+    mongo_client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Value-Predictor?retryWrites=true&w=majority')
 
     def do_init(self, arg):
         'Init the Stocks Database'
 
-        self.mongo_client.drop_database('Stock-Value-Predictor')
-        db = self.mongo_client['Stock-Value-Predictor']
+       # self.mongo_client.drop_database('Stock-Value-Predictor')
+       # db = self.mongo_client['Stock-Value-Predictor']
 
         # Download stocks data
-        start_date = '2022-01-01'
+        start_date = '2021-01-01'
         end_date = '2022-01-18'
 
         self.update_stocks(start_date, end_date)
@@ -48,7 +49,6 @@ class App(cmd.Cmd):
         end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d')
 
         self.update_stocks(start_date, end_date)
-
 
     def update_stocks(self, start_date, end_date):
         for company in target_company:

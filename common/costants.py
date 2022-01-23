@@ -1,5 +1,5 @@
-target_company = [{'name': 'tesla',
-                  'ticker': 'TSLA'},
+target_company = [#{'name': 'tesla',
+                  #'ticker': 'TSLA'},
                   {'name': 'apple',
                   'ticker': 'AAPL'},
                   {'name': 'microsoft',
