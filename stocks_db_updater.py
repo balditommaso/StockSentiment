@@ -16,7 +16,7 @@ from preprocessing.tweet_weight import set_tweets_weight
 class App(cmd.Cmd):
     intro = 'Stock Value Predictor Database updater'
     prompt = '>'
-    mongo_client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Value-Predictor?retryWrites=true&w=majority')
+    mongo_client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority')
 
     def do_init(self, arg):
         'Init the Stocks Database'
@@ -34,7 +34,7 @@ class App(cmd.Cmd):
         'Update the Stocks Database'
 
         # Retrieves last date updated
-        db = self.mongo_client['Stock-Value-Predictor']
+        db = self.mongo_client['Stock-Sentiment']
         doc = db['Stocks'].find().sort('Date', -1).limit(1)
 
         for x in doc:
@@ -79,7 +79,7 @@ class App(cmd.Cmd):
                 stocks_df.at[i, 'Polarity'] = avg_polarity
 
             if stocks_df.shape[0] != 0:  # Faster than DataFrame.empty
-                db = self.mongo_client['Stock-Value-Predictor']
+                db = self.mongo_client['Stock-Sentiment']
                 db['Stocks'].insert_many(stocks_df.to_dict("records"))
                 print("Database Stocks updated ...")
             else:
