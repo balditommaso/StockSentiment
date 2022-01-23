@@ -14,7 +14,7 @@ from preprocessing.tweet_weight import set_tweets_weight
 
 
 class App(cmd.Cmd):
-    intro = 'Stock Value Predictor Database updater'
+    intro = 'Stock Sentiment Stock Database Updater Launched\n'
     prompt = '>'
     mongo_client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority')
 
@@ -57,7 +57,8 @@ class App(cmd.Cmd):
             # Polarity
             for i, row in stocks_df.iterrows():
                 # Download tweets until market closes
-                start_date_tweets = str(int(datetime(row['Date'].year, row['Date'].month, row['Date'].day - 1,
+                day_before = row['Date'] - relativedelta(days=1)
+                start_date_tweets = str(int(datetime(day_before.year, day_before.month, day_before.day,
                                                      16, 0, 0,
                                                      tzinfo=pytz.utc).timestamp()))
 
