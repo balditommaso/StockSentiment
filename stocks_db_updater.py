@@ -12,7 +12,6 @@ from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
 
 
-
 class App(cmd.Cmd):
     intro = 'Stock Value Predictor Database updater'
     prompt = '>'

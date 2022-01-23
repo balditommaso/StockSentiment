@@ -63,18 +63,29 @@ hr {
 
 #select-stock{
     grid-column: 2/4;
+    font-size: 25px;
+    text-align: center;
+    line-height: 25px;
 }
 
 #market-index{
-    grid-column: 4/9;
+    grid-column: 4/8;
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: center;
     align-items: center;
 }
+
+#prediction {
+    align-items: center;
+    grid-column: 8/9;
+
+}
+
 #market-index * {
     font-size: 25px;
     font-weight: bold;
+    text-align: center;
 }
 
 #stocks-view {
@@ -99,6 +110,20 @@ hr {
 
 #load-tweets {
     overflow-y: scroll;
+}
+
+#news-view {
+    grid-column: 3/11;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    justify-items: center;
+    background-color: lightgoldenrodyellow;
+    border-radius: 12px;
+    height: 100%;
+    max-height: 80vh;
+    overflow: auto;
+    padding: 5px;
 }
 
 

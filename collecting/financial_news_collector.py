@@ -16,6 +16,7 @@ load_dotenv()
 # Initialize API attributes
 finhub_key = os.environ['FINHUB_KEY']
 
+
 def get_finhub_news(ticker, start_date, end_date):
     """
     Method that uses FINHUB API for retrieving all the news published between start_date and end_date of all the tickers

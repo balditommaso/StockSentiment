@@ -23,16 +23,15 @@ def update_tweets(ticker):
                 df = pd.read_json(path_or_buf=saved_tweets, orient='records', lines=True)
             if df.size > 0:
                 df['Datetime'] = pd.to_datetime(df['Datetime'])
-                first_insert = df['Datetime'].min()
-                today = datetime.now()
+                last_insert = df['Datetime'].max()
+                today = datetime.utcnow()
                 # check if need to update
-                if today.year == first_insert.year and today.month == first_insert.month and today.day == first_insert.day:
+                if today.year == last_insert.year and today.month == last_insert.month and today.day == last_insert.day:
                     print(company['ticker'] + ' already updated')
                     continue
 
-            start_date = str(int(datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=pytz.utc).timestamp()))
-            end_date = str(int(datetime.now().timestamp()))
-            print(start_date)
+            start_date = str(int(datetime(today.year, today.month, today.day-1, 16, 0, 0, tzinfo=pytz.utc).timestamp()))
+            end_date = str(int(datetime(today.year, today.month, today.day, 15, 59, 0, tzinfo=pytz.utc).timestamp()))
             tweets = download_tweet(company['ticker'], company['name'], start_date, end_date)
             with open(fname, mode='w') as f:
                 tweets.to_json(fname, orient="records", lines=True, date_format='iso')
@@ -45,12 +44,12 @@ def update_tweets(ticker):
             df = pd.read_json(path_or_buf=saved_tweets, orient='records', lines=True)
         df['Datetime'] = pd.to_datetime(df['Datetime'])
         last_insert = df['Datetime'].max()
+
         start_date = str(int((last_insert + relativedelta(seconds=1)).timestamp()))
-        end_date = str(int(datetime.now().timestamp()))
+        end_date = str(int(datetime.utcnow().timestamp()))
         tweets = download_tweet(ticker, name, start_date, end_date)
         if tweets.size > 0:
             df.append(tweets)
-        # tweets = tweets.drop_duplicates(subset=['Datetime'], keep='last')
         with open(fname, mode='w') as f:
             df.to_json(fname, orient="records", lines=True, date_format='iso')
 
