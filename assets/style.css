@@ -65,7 +65,8 @@ hr {
     grid-column: 2/4;
     font-size: 25px;
     text-align: center;
-    line-height: 25px;
+    line-height: 30px;
+    padding: 5px;
 }
 
 #market-index{

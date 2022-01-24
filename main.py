@@ -194,11 +194,19 @@ def show_stock_graph(ticker, period):
     target_stocks = get_stocks(ticker, start_date, end_date)
     fig = make_subplots(subplot_titles=ticker, specs=[[{"secondary_y": True}]])
     fig.add_trace(
-        go.Scatter(x=target_stocks["Date"], y=target_stocks["Close"], name="Close"),
-        secondary_y=False,
+        go.Scatter(
+            x=target_stocks["Date"],
+            y=target_stocks["Close"],
+            name="Close"
+        ),
+        secondary_y=False
     )
     fig.add_trace(
-        go.Scatter(x=target_stocks["Date"], y=target_stocks["Polarity"], name="Polarity Score"),
+        go.Scatter(
+            x=target_stocks["Date"],
+            y=target_stocks["Polarity"],
+            name="Polarity Score"
+        ),
         secondary_y=True,
     )
     return fig
@@ -253,7 +261,7 @@ def show_tweets(ticker):
         prediction = [html.P("Prediction:\n" + str(round(avg_polarity, 2)))]
         return [children, prediction]
     else:
-        raise PreventUpdate
+        return [[],[]]
 
 
 # @app.callback(
