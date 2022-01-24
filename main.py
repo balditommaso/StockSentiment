@@ -15,6 +15,7 @@ from pymongo import MongoClient
 
 import common.costants as const
 from classification.tweets_classification import classify_tweets, get_polarity_average
+from collecting.financial_news_collector import get_finhub_news
 from collecting.stocks_collector import get_live_data
 from collecting.tweet_collector import update_tweets
 from preprocessing.tweet_cleaner import filter_tweets
@@ -44,8 +45,8 @@ app.layout = html.Div([
             html.Div(
                 className="app-header",
                 children=[
-                    html.Div('Stock Value Predictor', className="title"),
-                    html.Label("your best friend for investments")
+                    html.Div('Stock Sentiment', className="title"),
+                    html.Label("The best friend for your investments")
                 ]
             ),
             dcc.Interval(
@@ -264,12 +265,14 @@ def show_tweets(ticker):
         return [[],[]]
 
 
-# @app.callback(
+#@app.callback(
 #     Output('', 'children'),
 #     Input("select-stock", "value")
-# )
-# def show_news(ticker):
-#     news_df = get_finhub_news(ticker, )
+#)
+#def show_news(ticker):
+#    today = datetime.now().strftime('%Y-%m-%d')
+#    news_df = get_finhub_news(ticker, today, today)
+#    return news_df
 
 
 def get_stocks(ticker, start_date, end_date):
