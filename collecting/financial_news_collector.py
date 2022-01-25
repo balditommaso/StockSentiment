@@ -62,5 +62,5 @@ def get_finhub_news(ticker, start_date, end_date):
                     'Url': result['url']
                     }
         news = news.append(contents, ignore_index=True)
-
+        news.sort_values(['Date'], inplace=True, ascending=False)
     return news

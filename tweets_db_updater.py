@@ -1,3 +1,4 @@
+import signal
 import time
 from datetime import datetime
 import threading
@@ -36,23 +37,34 @@ def get_last_update(ticker):
             return update['date']
 
 
-def set_last_update(ticker):
+def set_last_update(ticker, today):
     for update in last_updates:
         if update['ticker'] == ticker:
-            update['date'] = datetime.utcnow()
+            update['date'] = today
+
+
+def handle_stop():
+    stop_event.set()
+    updater.join()
+    client.close()
+    exit(0)
 
 
 def insert_new_tweets(args, stop_event):
     while not stop_event.is_set():
-        time.sleep(60)      # wait 1 minute
         for company in target_company:
             last_update = get_last_update(company['ticker'])
             start_date = str(int((last_update + relativedelta(seconds=1)).timestamp()))
-            end_date = str(int(datetime.utcnow().timestamp()))
-            set_last_update(company['ticker'])
+            today = datetime.utcnow()
+            end_date = str(int(today.timestamp()))
+            set_last_update(company['ticker'], today)
             new_tweets = download_tweet(company['ticker'], company['name'], start_date, end_date)
             if new_tweets.shape[0] > 0:
                 stored_tweets.insert_many(new_tweets.to_dict('records'))
+        time.sleep(60)  # wait 1 minute
+
+
+signal.signal(signal.SIGTERM, handle_stop)
 
 
 if __name__ == '__main__':
@@ -61,8 +73,9 @@ if __name__ == '__main__':
     updater = threading.Thread(target=insert_new_tweets, args=(0, stop_event))
     updater.start()
     while True:
-        command = input('Write stop to block the daemon:\n>')
-        if command == 'stop':
-            stop_event.set()
-            client.close()
-            exit(0)
+        try:
+            print(last_updates)
+            time.sleep(60)
+        except KeyboardInterrupt:
+            handle_stop()
+

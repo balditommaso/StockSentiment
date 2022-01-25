@@ -1,5 +1,8 @@
+import time
+
 import dash
 import joblib
+import pytz
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
@@ -7,6 +10,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
+from dotenv import load_dotenv
 from plotly.subplots import make_subplots
 import pandas as pd
 from datetime import datetime
@@ -15,7 +19,7 @@ from pymongo import MongoClient
 
 import common.costants as const
 from classification.tweets_classification import classify_tweets, get_polarity_average
-# from collecting.financial_news_collector import get_finhub_news
+from collecting.financial_news_collector import get_finhub_news
 from collecting.stocks_collector import get_live_data
 from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
@@ -90,7 +94,7 @@ app.layout = html.Div([
                             9: "3 mth",
                             10: "2 mth",
                             11: "1 mth",
-                            12: "today",
+                            12: "week",
                         },
                         value=[0, 12],
                         allowCross=False
@@ -126,12 +130,15 @@ app.layout = html.Div([
                 id='news-view',
                 children=[
                     html.H4('Last Financial News', className="title"),
-                    html.Div(
-                        id='load-news',
-                        className='list',
+                    dcc.Loading(
                         children=[
-                            html.Cite("Select one company")
-                        ]
+                            html.Div(
+                                id='load-news',
+                                className='list',
+                                children=[]
+                            )
+                        ],
+                        type='default'
                     )
                 ]
             )
@@ -233,7 +240,13 @@ def show_tweets(ticker):
     # validate the ticker selected
     if ticker is not None:
         # search new tweets
-        raw_tweets = get_tweets(ticker, datetime.utcnow() - relativedelta(hours=8), datetime.utcnow()) # to change
+        today = datetime.utcnow()
+        if market_status == 'Close' and today.hour > 16:
+            start_date = datetime(today.year, today.month, today.day, 16, 0, 0, tzinfo=pytz.utc)
+        else:
+            start_date = datetime(today.year, today.month, today.day-1, 16, 0, 0, tzinfo=pytz.utc)
+        # collecting
+        raw_tweets = get_tweets(ticker, start_date, datetime.utcnow())
         # pre-processing
         clean_tweets = filter_tweets(raw_tweets, ticker)
         weighted_tweets = set_tweets_weight(clean_tweets)
@@ -250,7 +263,8 @@ def show_tweets(ticker):
                 },
                 children=[
                     html.Cite("@" + tweet["Account_Name"]),
-                    html.P(tweet['Real_Text'])
+                    html.P(tweet['Real_Text']),
+                    html.Cite(tweet['Datetime'])
                 ],
             )
             children.append(div)
@@ -262,14 +276,32 @@ def show_tweets(ticker):
         return [[],[]]
 
 
-#@app.callback(
-#     Output('', 'children'),
-#     Input("select-stock", "value")
-#)
-#def show_news(ticker):
-#    today = datetime.now().strftime('%Y-%m-%d')
-#    news_df = get_finhub_news(ticker, today, today)
-#    return news_df
+@app.callback(
+    Output('load-news', 'children'),
+    Input("select-stock", "value")
+)
+def show_news(ticker):
+    if ticker is not None:
+        today = datetime.utcnow()
+        start_date = (today - relativedelta(days=3)).strftime('%Y-%m-%d')
+        end_date = (today + relativedelta(days=1)).strftime('%Y-%m-%d')
+        news_df = get_finhub_news(ticker, start_date, end_date)
+        children = []
+        for index, row in news_df.iterrows():
+            div = html.Div(
+                className='news',
+                children=[
+                    html.Cite(row['Source']),
+                    html.A(
+                        children=html.H4(row['Headline']),
+                        href=row['Url']
+                    ),
+                    html.P(row['Summary']),
+                    html.Cite(datetime.fromtimestamp(row['Date']).strftime('%Y-%m-%d'))
+                ]
+            )
+            children.append(div)
+        return children
 
 
 def get_stocks(ticker, start_date, end_date):
@@ -290,7 +322,6 @@ def get_stocks(ticker, start_date, end_date):
         }
     )
     list_cur = list(cursor)
-    print(pd.DataFrame(list_cur))
     return pd.DataFrame(list_cur)
 
 
@@ -299,14 +330,17 @@ def get_tweets(ticker, start_date, end_date):
                          'Stock-Sentiment?retryWrites=true&w=majority')
     db = client['Stock-Sentiment']
     collection = db['Tweets']
-    cursor = collection.find(
-        {
-            "Ticker": ticker,
-            "Datetime": {"$gte": start_date, "$lte": end_date}
-        },
-    )
-    list_cur = list(cursor)
-    print(pd.DataFrame(list_cur))
+    while True:
+        cursor = collection.find(
+            {
+                "Ticker": ticker,
+                "Datetime": {"$gte": start_date, "$lte": end_date}
+            },
+        )
+        list_cur = list(cursor)
+        if len(list_cur) > 0:
+            break
+        time.sleep(60)
     return pd.DataFrame(list_cur)
 
 

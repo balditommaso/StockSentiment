@@ -56,7 +56,7 @@ def update_tweets(ticker):
 
 def download_tweet(ticker, name, start_date, end_date):
     tweets_list = []
-    print("Collecting tweets: " + ticker + "\n")
+    # print("Collecting tweets: " + ticker + "\n")
     keyword = name + " " + ticker
     for i, tweet in enumerate(sntwitter.TwitterSearchScraper(keyword + ' since_time:' + start_date +
                                                              ' until_time:' + end_date).get_items()):
@@ -65,7 +65,7 @@ def download_tweet(ticker, name, start_date, end_date):
 
     # Creating a dataframe from the tweets list above
     tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime', 'Ticker'])
-    print("Finish. \n")
+    # print("Finish. \n")
     return tweets_df
 
 
