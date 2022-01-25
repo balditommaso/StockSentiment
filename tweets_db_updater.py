@@ -17,7 +17,7 @@ last_updates = []
 
 def check_last_insert():
     for company in target_company:
-        cursor = stored_tweets.find({'Ticker': company['ticker']}, {'Date': 1}).sort('Date', -1).limit(1)
+        cursor = stored_tweets.find({'Ticker': company['ticker']}, {'Datetime': 1}).sort('Datetime', -1).limit(1)
         for doc in cursor:
             last_date_uploaded = doc['Datetime']
         if len(list(cursor)) == 0:
@@ -42,9 +42,8 @@ def set_last_update(ticker):
             update['date'] = datetime.utcnow()
 
 
-def insert_new_tweets(args):
-    t = threading.current_thread()
-    while getattr(t, 'do_run', True):
+def insert_new_tweets(args, stop_event):
+    while not stop_event.is_set():
         time.sleep(60)      # wait 1 minute
         for company in target_company:
             last_update = get_last_update(company['ticker'])
@@ -58,10 +57,12 @@ def insert_new_tweets(args):
 
 if __name__ == '__main__':
     check_last_insert()
-    updater = threading.Thread(target=insert_new_tweets, args=(0,))
+    stop_event = threading.Event()
+    updater = threading.Thread(target=insert_new_tweets, args=(0, stop_event))
     updater.start()
     while True:
-        print(last_updates)
         command = input('Write stop to block the daemon:\n>')
         if command == 'stop':
-            updater.do_run = False
+            stop_event.set()
+            client.close()
+            exit(0)
