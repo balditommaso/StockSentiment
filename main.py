@@ -173,7 +173,7 @@ def update_market_index(ticker, n):
     Input('update-time', 'n_intervals')
 )
 def update_market(n):
-    today = datetime.utcnow()
+    today = datetime.utcnow() - relativedelta(hours=5)
     if (today.hour <= 9 and today.minute < 30) or (today.hour > 16):
         global market_status
         market_status = 'Close'
@@ -241,12 +241,13 @@ def show_tweets(ticker):
     if ticker is not None:
         # search new tweets
         today = datetime.utcnow()
-        if market_status == 'Close' and today.hour > 16:
-            start_date = datetime(today.year, today.month, today.day, 16, 0, 0, tzinfo=pytz.utc)
+        if market_status == 'Close' and today.hour > 21:
+            start_date = datetime(today.year, today.month, today.day, 21, 0, 0, tzinfo=pytz.utc)
         else:
-            start_date = datetime(today.year, today.month, today.day-1, 16, 0, 0, tzinfo=pytz.utc)
+            start_date = datetime(today.year, today.month, today.day-1, 21, 0, 0, tzinfo=pytz.utc)
         # collecting
         raw_tweets = get_tweets(ticker, start_date, datetime.utcnow())
+        print(raw_tweets)
         # pre-processing
         clean_tweets = filter_tweets(raw_tweets, ticker)
         weighted_tweets = set_tweets_weight(clean_tweets)
@@ -264,7 +265,7 @@ def show_tweets(ticker):
                 children=[
                     html.Cite("@" + tweet["Account_Name"]),
                     html.P(tweet['Real_Text']),
-                    html.Cite(tweet['Datetime'])
+                    html.Cite(tweet['Datetime'] - relativedelta(hours=4))
                 ],
             )
             children.append(div)
@@ -330,6 +331,7 @@ def get_tweets(ticker, start_date, end_date):
                          'Stock-Sentiment?retryWrites=true&w=majority')
     db = client['Stock-Sentiment']
     collection = db['Tweets']
+    print(start_date, end_date)
     while True:
         cursor = collection.find(
             {
@@ -338,6 +340,7 @@ def get_tweets(ticker, start_date, end_date):
             },
         )
         list_cur = list(cursor)
+        print(list_cur)
         if len(list_cur) > 0:
             break
         time.sleep(60)

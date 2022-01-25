@@ -54,7 +54,6 @@ def get_finhub_news(ticker, start_date, end_date):
             nb_request = 0
 
     for result in data:
-        print(result)
         contents = {'Date': result['datetime'],
                     'Headline': result['headline'],
                     'Source': result['source'],

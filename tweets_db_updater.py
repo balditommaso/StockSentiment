@@ -15,19 +15,17 @@ stored_tweets = db['Tweets']
 
 last_updates = []
 
-
-def check_last_insert():
+# init
+def init():
     for company in target_company:
         cursor = stored_tweets.find({'Ticker': company['ticker']}, {'Datetime': 1}).sort('Datetime', -1).limit(1)
-        for doc in cursor:
-            last_date_uploaded = doc['Datetime']
-        if len(list(cursor)) == 0:
+        results = list(cursor)
+        if len(results) == 0:
             last_updates.append({'ticker': company['ticker'], 'date': (datetime.utcnow() - relativedelta(days=1))})
         else:
-            for update in last_updates:
-                if update['ticker'] == company['ticker']:
-                    update['date'] = last_date_uploaded
-                    return
+            last_date_uploaded = None
+            for doc in results:
+                last_date_uploaded = doc['Datetime']
             last_updates.append({'ticker': company['ticker'], 'date': last_date_uploaded})
 
 
@@ -54,13 +52,17 @@ def insert_new_tweets(args, stop_event):
     while not stop_event.is_set():
         for company in target_company:
             last_update = get_last_update(company['ticker'])
-            start_date = str(int((last_update + relativedelta(seconds=1)).timestamp()))
+            print(company['ticker'], last_update)
+            # snscrape remove 1 hour from the start date
+            start_date = (int((last_update + relativedelta(hours=1, seconds=1)).timestamp()))
             today = datetime.utcnow()
-            end_date = str(int(today.timestamp()))
+            end_date = (int(today.timestamp()))
+            print(datetime.fromtimestamp(start_date), datetime.fromtimestamp(end_date))
             set_last_update(company['ticker'], today)
-            new_tweets = download_tweet(company['ticker'], company['name'], start_date, end_date)
+            new_tweets = download_tweet(company['ticker'], company['name'], str(start_date), str(end_date))
+            print(new_tweets)
             if new_tweets.shape[0] > 0:
-                stored_tweets.insert_many(new_tweets.to_dict('records'))
+                print(stored_tweets.insert_many(new_tweets.to_dict('records')))
         time.sleep(60)  # wait 1 minute
 
 
@@ -68,7 +70,7 @@ signal.signal(signal.SIGTERM, handle_stop)
 
 
 if __name__ == '__main__':
-    check_last_insert()
+    init()
     stop_event = threading.Event()
     updater = threading.Thread(target=insert_new_tweets, args=(0, stop_event))
     updater.start()

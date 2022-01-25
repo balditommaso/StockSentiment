@@ -58,12 +58,10 @@ class App(cmd.Cmd):
                 # Download tweets until market closes
                 day_before = row['Date'] - relativedelta(days=1)
                 start_date_tweets = str(int(datetime(day_before.year, day_before.month, day_before.day,
-                                                     16, 0, 0,
-                                                     tzinfo=pytz.utc).timestamp()))
+                                                     21, 0, 0, tzinfo=pytz.utc).timestamp()))
 
                 end_date_tweets = str(int(datetime(row['Date'].year, row['Date'].month, row['Date'].day,
-                                                   15, 59, 59,
-                                                   tzinfo=pytz.utc).timestamp()))
+                                                   20, 59, 59, tzinfo=pytz.utc).timestamp()))
 
                 # Collecting
                 daily_tweets = download_tweet(company['ticker'], company['name'], start_date_tweets, end_date_tweets)
