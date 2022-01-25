@@ -45,7 +45,7 @@ def get_finhub_news(ticker, start_date, end_date):
     for item in range(delta_date + 1):
         nb_request += 1
         r = requests.get('https://finnhub.io/api/v1/company-news?symbol=' + ticker + '&from=' + date + '&to=' + date
-                             + '&token=' + finhub_key)
+                         + '&token=' + finhub_key)
         data += r.json()
         date_obj = date_obj + relativedelta(days=1)
         date = date_obj.strftime("%Y-%m-%d")

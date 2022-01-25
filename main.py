@@ -15,15 +15,15 @@ from pymongo import MongoClient
 
 import common.costants as const
 from classification.tweets_classification import classify_tweets, get_polarity_average
-from collecting.financial_news_collector import get_finhub_news
+# from collecting.financial_news_collector import get_finhub_news
 from collecting.stocks_collector import get_live_data
-from collecting.tweet_collector import update_tweets
 from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
 
 stylesheet = ['./assets/style.css']
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+app.title = "Stock Sentiment"
 
 market_status = 'Open'
 
@@ -31,10 +31,6 @@ actual_close = 0
 change = 0
 pct_change = 0
 
-
-# start-up functions
-#App.do_update()     # accidenti ai server di edo
-update_tweets('init')
 
 app.layout = html.Div([
     # create a loading page
@@ -83,17 +79,17 @@ app.layout = html.Div([
                         step=None,
                         marks={
                             0: "year",
-                            1: "11 months",
-                            2: "10 months",
-                            3: "9 months",
-                            4: "8 months",
-                            5: "7 months",
-                            6: "6 months",
-                            7: "5 months",
-                            8: "4 months",
-                            9: "3 months",
-                            10: "2 months",
-                            11: "1 month",
+                            1: "11 mth",
+                            2: "10 mth",
+                            3: "9 mth",
+                            4: "8 mth",
+                            5: "7 mth",
+                            6: "6 mth",
+                            7: "5 mth",
+                            8: "4 mth",
+                            9: "3 mth",
+                            10: "2 mth",
+                            11: "1 mth",
                             12: "today",
                         },
                         value=[0, 12],
@@ -112,13 +108,17 @@ app.layout = html.Div([
                             'margin': '10px'
                         }
                     ),
-                    html.Div(
-                        id="load-tweets",
-                        className="list",
+                    dcc.Loading(
                         children=[
-                            html.Cite("Select one company")
-                        ]
+                            html.Div(
+                                id="load-tweets",
+                                className="list",
+                                children=[]
+                            )
+                        ],
+                        type='default'
                     )
+
                 ]
             ),
             html.Hr(),
@@ -193,7 +193,7 @@ def show_stock_graph(ticker, period):
     if start_date.date() == end_date.date():
         start_date = (start_date - relativedelta(weeks=1))
     target_stocks = get_stocks(ticker, start_date, end_date)
-    fig = make_subplots(subplot_titles=ticker, specs=[[{"secondary_y": True}]])
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
             x=target_stocks["Date"],
@@ -210,6 +210,7 @@ def show_stock_graph(ticker, period):
         ),
         secondary_y=True,
     )
+    fig.update_layout(title_text=ticker)
     return fig
 
 
@@ -232,11 +233,7 @@ def show_tweets(ticker):
     # validate the ticker selected
     if ticker is not None:
         # search new tweets
-        update_tweets(ticker)
-        fname = 'data/tweets/tweets_' + ticker + '.json'
-        with open(fname, mode='r') as file:
-            raw_tweets = pd.read_json(path_or_buf=file, orient='records', lines=True)
-
+        raw_tweets = get_tweets(ticker, datetime.utcnow() - relativedelta(hours=8), datetime.utcnow()) # to change
         # pre-processing
         clean_tweets = filter_tweets(raw_tweets, ticker)
         weighted_tweets = set_tweets_weight(clean_tweets)
@@ -280,7 +277,6 @@ def get_stocks(ticker, start_date, end_date):
                          'Stock-Sentiment?retryWrites=true&w=majority')
     db = client['Stock-Sentiment']
     collection = db['Stocks']
-    print(type(start_date))
     cursor = collection.find(
         {
             "Ticker": ticker,
@@ -292,6 +288,22 @@ def get_stocks(ticker, start_date, end_date):
             "Ticker": 1,
             "Polarity": 1
         }
+    )
+    list_cur = list(cursor)
+    print(pd.DataFrame(list_cur))
+    return pd.DataFrame(list_cur)
+
+
+def get_tweets(ticker, start_date, end_date):
+    client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/'
+                         'Stock-Sentiment?retryWrites=true&w=majority')
+    db = client['Stock-Sentiment']
+    collection = db['Tweets']
+    cursor = collection.find(
+        {
+            "Ticker": ticker,
+            "Datetime": {"$gte": start_date, "$lte": end_date}
+        },
     )
     list_cur = list(cursor)
     print(pd.DataFrame(list_cur))

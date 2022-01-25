@@ -61,10 +61,10 @@ def download_tweet(ticker, name, start_date, end_date):
     for i, tweet in enumerate(sntwitter.TwitterSearchScraper(keyword + ' since_time:' + start_date +
                                                              ' until_time:' + end_date).get_items()):
         print("\t" + str(i), " ", tweet.date)
-        tweets_list.append([tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date])
+        tweets_list.append([tweet.user.username, tweet.user.followersCount, tweet.content, tweet.date, ticker])
 
     # Creating a dataframe from the tweets list above
-    tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime'])
+    tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime', 'Ticker'])
     print("Finish. \n")
     return tweets_df
 

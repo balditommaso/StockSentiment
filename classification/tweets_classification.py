@@ -9,6 +9,7 @@ def classify_tweets(tweets_weighted):
 
     return tweets_weighted
 
+
 def get_polarity_average(tweets):
     # Summarize polarity
     sum = 0
