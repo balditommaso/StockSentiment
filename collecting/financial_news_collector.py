@@ -54,8 +54,8 @@ def get_finhub_news(ticker, start_date, end_date):
             nb_request = 0
 
     for result in data:
-        contents = {'Ticker' : result['related'],
-                    'Date': result['datetime'],
+        print(result)
+        contents = {'Date': result['datetime'],
                     'Headline': result['headline'],
                     'Source': result['source'],
                     'Summary': result['summary'],
@@ -64,39 +64,3 @@ def get_finhub_news(ticker, start_date, end_date):
         news = news.append(contents, ignore_index=True)
 
     return news
-
-def update_news(arg):
-
-    for company in target_company:
-        fname = "../data/news/news_" + company['ticker'] + ".json"
-
-        if arg == 'init':
-            start_date = "2022-01-10"
-            end_date = "2022-01-18"
-            mode = 'w'
-
-        elif arg == 'update':
-            end_date = datetime.now().strftime('%Y-%m-%d')
-
-            # Retrieve the date of the last update
-            with open(fname, mode='r') as saved_news:
-                df = pd.read_json(path_or_buf=saved_news, orient='records', lines=True)
-
-            last_insert = df['Date'].iloc[-1]
-            start_date = last_insert.strftime('%Y-%m-%d')
-            mode = 'a'
-
-        news_df = get_finhub_news(company['ticker'], start_date, end_date)
-
-        # Drop today news that are already in the file
-        if arg == 'update':
-            news_df = news_df[news_df['Date'] < last_insert.timestamp()]
-
-        if news_df.shape[0] != 0:  # Faster than DataFrame.empty
-            with open(fname, mode=mode, encoding='utf-8') as news_json:
-                news_df.to_json(path_or_buf=news_json, orient='records', lines=True, index=True, date_format='iso')
-
-
-if __name__ == "__main__":
-    #update_news('init')
-    update_news('update')
