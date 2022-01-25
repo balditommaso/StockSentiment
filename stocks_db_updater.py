@@ -4,7 +4,7 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
 
-from classification.tweets_classification import classify_tweets, get_polarity_average
+from classification.tweets_classification import classify_tweets, get_daily_polarity
 from collecting import stocks_collector
 from collecting.tweet_collector import download_tweet
 from common.costants import target_company
@@ -24,8 +24,8 @@ class App(cmd.Cmd):
        # db = self.mongo_client['Stock-Value-Predictor']
 
         # Download stocks data
-        start_date = '2021-01-01'
-        end_date = '2022-01-18'
+        start_date = '2017-01-01'
+        end_date = '2022-01-24'
 
         self.update_stocks(start_date, end_date)
 
@@ -72,9 +72,11 @@ class App(cmd.Cmd):
 
                 # Classification
                 daily_tweets_classified = classify_tweets(daily_tweets_weighted)
-                avg_polarity = get_polarity_average(daily_tweets_classified)
+                polarity = get_daily_polarity(daily_tweets_classified)
 
-                stocks_df.at[i, 'Polarity'] = avg_polarity
+                stocks_df.at[i, 'Polarity'] = polarity
+                stocks_df.at[i, 'Daily_Tweets'] = int(daily_tweets_classified.shape[0])
+
 
             if stocks_df.shape[0] != 0:  # Faster than DataFrame.empty
                 db = self.mongo_client['Stock-Sentiment']
