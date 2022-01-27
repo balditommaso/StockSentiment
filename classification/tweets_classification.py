@@ -19,4 +19,6 @@ def get_daily_polarity(tweets):
         elif tweet['Polarity'] == 'Negative':
             sum = sum - tweet['Weight']
 
-    return sum
+    avg_polarity = sum / tweets.shape[0]
+
+    return avg_polarity
