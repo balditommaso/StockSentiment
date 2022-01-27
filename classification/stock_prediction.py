@@ -2,14 +2,16 @@ import joblib
 import pandas as pd
 import numpy as np
 
-def prepare_stock_data(df):
 
-    # Set date as index
-    df['Date'] = df['Date'].astype(str).str.split(' ').str[0]
-    df = df.set_index('Date')
+def prepare_stock_data(df, avg_polarity):
 
-    # Add label
-    df['Label'] = df.rolling(2).apply(lambda x: x.iloc[1] > x.iloc[0])['Close']
+    # Drop unused columns
+    df.drop(columns=["Date", "Ticker"], inplace=True)
+
+    # Add a new row with daily current sentiment
+    row = {'Polarity': avg_polarity}
+
+    df = df.append(row, ignore_index=True)
 
     # Shift one day, we can not use the future to predict the past
     df[['Open', 'High', 'Low', 'Close', 'Volume']] = df[['Open', 'High', 'Low', 'Close', 'Volume']].shift(1)
@@ -28,14 +30,14 @@ def prepare_stock_data(df):
     df['5 Days Pol EMA'] = np.round(df['Polarity'].copy().ewm(span=5, adjust=False).mean(), decimals=3)
     df['3 Days Pol EMA'] = np.round(df['Polarity'].copy().ewm(span=3, adjust=False).mean(), decimals=3)
 
-    # Drop rows with NaN values
-    df.dropna(inplace=True)
+    return df.tail(1)
 
-    return df
-
-def predict_stock_trend(stock_data_with_polarity):
+def predict_stock_trend(stock_data_with_polarity, avg_polarity):
     # Classifying
-    clf = joblib.load('model/stock_trend_predictor.pkl')
+    clf = joblib.load('../model/stock_trend_predictor.pkl')
+
+    today_data = prepare_stock_data(stock_data_with_polarity, avg_polarity)
+    # print(today_data)
 
     predictors = ['Prev Close',
                   'Prev Volume',
@@ -48,6 +50,14 @@ def predict_stock_trend(stock_data_with_polarity):
                   '3 Days Pol EMA'
                   ]
 
-    prediction = clf.predict(stock_data_with_polarity[predictors].values)
+    prediction = clf.predict(today_data[predictors])
 
     return prediction
+
+
+if __name__ == "__main__":
+    df = pd.read_csv('../training/data/AMZN_stock_data_with_polarity.csv')
+    df = df.tail(100)
+    pred = predict_stock_trend(df, 7000.6)
+
+    print(pred)
