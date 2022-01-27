@@ -1,5 +1,6 @@
 import yfinance as yf
 
+
 def get_live_data(stock):
     df = yf.download(tickers=stock, period='1d', interval='1m')
 
@@ -22,10 +23,3 @@ def download_stocks(company_ticker, start_date, end_date):
     df['Ticker'] = company_ticker
 
     return df
-
-
-# init the storage
-if __name__ == "__main__":
-    #update_stocks('init')
-    #update_stocks('update')
-    get_live_data('AAPL')

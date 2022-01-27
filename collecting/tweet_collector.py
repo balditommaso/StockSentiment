@@ -67,9 +67,3 @@ def download_tweet(ticker, name, start_date, end_date):
     tweets_df = pd.DataFrame(tweets_list, columns=["Account_Name", 'Number_Follower', 'Text', 'Datetime', 'Ticker'])
     print("Finish. \n")
     return tweets_df
-
-
-# TEST
-if __name__ == "__main__":
-    rs = download_tweet('TSLA', 'tesla', str(int((datetime.utcnow() - relativedelta(hours=1)).timestamp())), str(int(datetime.utcnow().timestamp())))
-    print(rs)

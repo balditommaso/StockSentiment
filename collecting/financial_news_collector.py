@@ -1,12 +1,10 @@
 import pandas as pd
 import requests
 import os
-from os.path import join
 from dotenv import load_dotenv
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
-from pathlib import Path
 
 from common.costants import target_company
 

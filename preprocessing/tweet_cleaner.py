@@ -1,7 +1,5 @@
-import pandas as pd
 from langdetect import detect
 import re
-
 from common.costants import target_company
 
 
@@ -81,15 +79,5 @@ def filter_tweets(tweets, ticker):
     # remove special char
     tweets['Text'] = tweets['Text'].apply(remove_special_char)
     return tweets
-
-
-# TEST
-if __name__ == "__main__":
-    fname = '../data/TEST_FILTER.json'
-    with open(fname, mode='r') as file:
-        df = pd.read_json(path_or_buf=file, orient='records', lines=True)
-    print(df['Text'])
-    clean_df = filter_tweets(df, 'AMZN')
-    print(clean_df['Text'])
 
 

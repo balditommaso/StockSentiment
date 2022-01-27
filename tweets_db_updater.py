@@ -1,21 +1,26 @@
 import signal
 import time
+import certifi
 from datetime import datetime
 import threading
+
+import pymongo.errors
 from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
 
 from collecting.tweet_collector import download_tweet
 from common.costants import target_company
 
-client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/'
-                     'Stock-Sentiment?retryWrites=true&w=majority')
+client = MongoClient(
+    'mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority',
+    tlsCAFile=certifi.where()
+)
 db = client['Stock-Sentiment']
 stored_tweets = db['Tweets']
 
 last_updates = []
 
-# init
+
 def init():
     for company in target_company:
         cursor = stored_tweets.find({'Ticker': company['ticker']}, {'Datetime': 1}).sort('Datetime', -1).limit(1)
@@ -62,7 +67,13 @@ def insert_new_tweets(args, stop_event):
             new_tweets = download_tweet(company['ticker'], company['name'], str(start_date), str(end_date))
             print(new_tweets)
             if new_tweets.shape[0] > 0:
-                print(stored_tweets.insert_many(new_tweets.to_dict('records')))
+                try:
+                    print(stored_tweets.insert_many(new_tweets.to_dict('records')))
+                except pymongo.errors.BulkWriteError as e:
+                    print(e.details['writeErrors'])
+                    panic_list = list(filter(lambda msg: msg['code'] != 11000, e.details['writeErrors']))
+                    if len(panic_list) > 0:
+                        print(f"There are not duplicate errors {panic_list}")
         time.sleep(60)  # wait 1 minute
 
 

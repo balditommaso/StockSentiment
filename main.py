@@ -1,5 +1,6 @@
 import time
 
+import certifi
 import dash
 import joblib
 import pytz
@@ -18,13 +19,17 @@ from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
 
 import common.costants as const
-from classification.tweets_classification import classify_tweets, get_polarity_average
+from classification.tweets_classification import classify_tweets, get_daily_polarity
 from collecting.financial_news_collector import get_finhub_news
 from collecting.stocks_collector import get_live_data
 from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
 
 stylesheet = ['./assets/style.css']
+client = MongoClient(
+    'mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority',
+    tlsCAFile=certifi.where()
+)
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = "Stock Sentiment"
@@ -269,9 +274,9 @@ def show_tweets(ticker):
                 ],
             )
             children.append(div)
-        avg_polarity = get_polarity_average(processed_tweets)
+        polarity_score = get_daily_polarity(processed_tweets)
         # TO DO: second classification model
-        prediction = [html.P("Prediction:\n" + str(round(avg_polarity, 2)))]
+        prediction = [html.P("Prediction:\n" + str(round(polarity_score, 2)))]
         return [children, prediction]
     else:
         return [[],[]]
@@ -306,8 +311,6 @@ def show_news(ticker):
 
 
 def get_stocks(ticker, start_date, end_date):
-    client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/'
-                         'Stock-Sentiment?retryWrites=true&w=majority')
     db = client['Stock-Sentiment']
     collection = db['Stocks']
     cursor = collection.find(
@@ -327,8 +330,6 @@ def get_stocks(ticker, start_date, end_date):
 
 
 def get_tweets(ticker, start_date, end_date):
-    client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/'
-                         'Stock-Sentiment?retryWrites=true&w=majority')
     db = client['Stock-Sentiment']
     collection = db['Tweets']
     print(start_date, end_date)
