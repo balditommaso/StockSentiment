@@ -317,6 +317,13 @@ def show_news(ticker):
             children.append(div)
         return children
 
+    
+def process_tweet(df_tweet, ticker):
+    clean_tweets = filter_tweets(df_tweet, ticker)
+    weighted_tweets = set_tweets_weight(clean_tweets)
+    processed_tweets = classify_tweets(weighted_tweets)
+    return processed_tweets
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
