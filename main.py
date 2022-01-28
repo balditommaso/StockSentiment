@@ -178,9 +178,9 @@ def update_market_index(ticker, n):
 )
 def update_market(n):
     today = datetime.utcnow() - relativedelta(hours=5)
-    if (today.hour <= 9 and today.minute < 30) or (today.hour > 16):
+    if (today.hour < 9) or (today.hour == 9 and today.minute < 30) or (today.hour > 16):
         global market_status
-        market_status = 'Close'
+        market_status = 'Closed'
     else:
         market_status = 'Open'
     return [
