@@ -35,7 +35,6 @@ class MongoManager:
                 },
             )
             list_cur = list(cursor)
-            print(list_cur)
             if len(list_cur) > 0:
                 break
             time.sleep(60)
