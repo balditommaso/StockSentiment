@@ -38,7 +38,7 @@ hr {
 /*------------------------COMPONENTS-----------------------------*/
 
 .app-header{
-    grid-column: 2/12;
+    grid-column: 2/6;
     grid-row: 1/2;
     height: 50px;
     line-height: 30px;
@@ -50,14 +50,15 @@ hr {
 }
 
 #market-view {
-    grid-column: 7/13;
+    grid-column: 6/12;
     grid-row: 1/2;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
 }
 
 #market-view *{
-    height: 50px;
+    height: 40px;
     line-height: 40px;
 }
 

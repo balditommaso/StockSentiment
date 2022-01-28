@@ -1,13 +1,12 @@
 import cmd
 from datetime import datetime
 
-import certifi
 import pytz
 from dateutil.relativedelta import relativedelta
-from pymongo import MongoClient
 
 from classification.tweets_classification import classify_tweets, get_daily_polarity
 from collecting import stocks_collector
+from collecting.mongo_manager import MongoManager
 from collecting.tweet_collector import download_tweet
 from common.costants import target_company
 from preprocessing.tweet_cleaner import filter_tweets
@@ -17,34 +16,22 @@ from preprocessing.tweet_weight import set_tweets_weight
 class App(cmd.Cmd):
     intro = 'Stock Sentiment Stock Database Updater Launched\n'
     prompt = '>'
-    mongo_client = MongoClient(
-        'mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority',
-        tlsCAFile=certifi.where()
-    )
+    mongoDB = MongoManager()
 
+    def do_exit(self, arg):
+        exit(0)
 
     def do_init(self, arg):
         'Init the Stocks Database'
-
-       # self.mongo_client.drop_database('Stock-Value-Predictor')
-       # db = self.mongo_client['Stock-Value-Predictor']
-
         # Download stocks data
-        start_date = '2017-01-01'
+        start_date = '2021-01-01'
         end_date = '2022-01-24'
-
         self.update_stocks(start_date, end_date)
 
     def do_update(self, arg):
         'Update the Stocks Database'
-
         # Retrieves last date updated
-        db = self.mongo_client['Stock-Sentiment']
-        doc = db['Stocks'].find().sort('Date', -1).limit(1)
-
-        for x in doc:
-            last_date_uploaded = x['Date']
-
+        last_date_uploaded = self.mongoDB.last_update_stocks()
         if last_date_uploaded.strftime('%Y-%m-%d') == datetime.now().strftime('%Y-%m-%d'):
             print("Database Stocks already updated ...")
             return
@@ -52,7 +39,6 @@ class App(cmd.Cmd):
         # Time zones fix
         start_date = (last_date_uploaded + relativedelta(days=2)).strftime('%Y-%m-%d')
         end_date = (datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d')
-
         self.update_stocks(start_date, end_date)
 
     def update_stocks(self, start_date, end_date):
@@ -84,8 +70,7 @@ class App(cmd.Cmd):
                 stocks_df.at[i, 'Daily_Tweets'] = int(daily_tweets_classified.shape[0])
 
             if stocks_df.shape[0] != 0:  # Faster than DataFrame.empty
-                db = self.mongo_client['Stock-Sentiment']
-                db['Stocks'].insert_many(stocks_df.to_dict("records"))
+                self.mongoDB.insert_stocks(stocks_df)
                 print("Database Stocks updated ...")
             else:
                 print("Database Stocks already updated ...")

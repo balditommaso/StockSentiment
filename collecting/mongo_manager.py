@@ -83,6 +83,25 @@ class MongoManager:
         finally:
             self.close_connection()
 
+    def last_update_stocks(self):
+        self.open_connection()
+        collection = self.db['Stocks']
+        cursor = collection.find().sort('Date', -1).limit(1)
+        for doc in cursor:
+            last_update = doc['Date']
+        self.close_connection()
+        return last_update
+
     def insert_stocks(self, stocks_df):
         self.open_connection()
+        collection = self.db['Stocks']
+        try:
+            collection.insert_many(stocks_df.to_dict('records'))
+        except pymongo.errors.BulkWriteError as e:
+            print(e.details['writeErrors'])
+            panic_list = list(filter(lambda msg: msg['code'] != 11000, e.details['writeErrors']))
+            if len(panic_list) > 0:
+                print(f"There are not duplicate errors {panic_list}")
+        finally:
+            self.close_connection()
 
