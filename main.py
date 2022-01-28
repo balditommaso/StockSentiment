@@ -19,26 +19,25 @@ from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
 
 import common.costants as const
+from classification.stock_prediction import predict_stock_trend
 from classification.tweets_classification import classify_tweets, get_daily_polarity
 from collecting.financial_news_collector import get_finhub_news
+from collecting.mongo_manager import MongoManager
 from collecting.stocks_collector import get_live_data
 from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
 
 stylesheet = ['./assets/style.css']
-client = MongoClient(
-    'mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority',
-    tlsCAFile=certifi.where()
-)
+mongoDB = MongoManager()
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = "Stock Sentiment"
 
 market_status = 'Open'
-
 actual_close = 0
 change = 0
 pct_change = 0
+last_stocks = None
 
 
 app.layout = html.Div([
@@ -204,20 +203,21 @@ def show_stock_graph(ticker, period):
     end_date = set_date(period[1])
     if start_date.date() == end_date.date():
         start_date = (start_date - relativedelta(weeks=1))
-    target_stocks = get_stocks(ticker, start_date, end_date)
+    global last_stocks
+    last_stocks = mongoDB.get_stocks(ticker, start_date, end_date)
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
-            x=target_stocks["Date"],
-            y=target_stocks["Close"],
+            x=last_stocks["Date"],
+            y=last_stocks["Close"],
             name="Close"
         ),
         secondary_y=False
     )
     fig.add_trace(
         go.Scatter(
-            x=target_stocks["Date"],
-            y=target_stocks["Polarity"],
+            x=last_stocks["Date"],
+            y=last_stocks["Polarity"],
             name="Polarity Score"
         ),
         secondary_y=True,
@@ -251,8 +251,7 @@ def show_tweets(ticker):
         else:
             start_date = datetime(today.year, today.month, today.day-1, 21, 0, 0, tzinfo=pytz.utc)
         # collecting
-        raw_tweets = get_tweets(ticker, start_date, datetime.utcnow())
-        print(raw_tweets)
+        raw_tweets = mongoDB.get_tweets(ticker, start_date, datetime.utcnow())
         # pre-processing
         clean_tweets = filter_tweets(raw_tweets, ticker)
         weighted_tweets = set_tweets_weight(clean_tweets)
@@ -275,11 +274,20 @@ def show_tweets(ticker):
             )
             children.append(div)
         polarity_score = get_daily_polarity(processed_tweets)
-        # TO DO: second classification model
-        prediction = [html.P("Prediction:\n" + str(round(polarity_score, 2)))]
+        # synch with load_stocks
+        while last_stocks is None or ticker != last_stocks.iloc[0]['Ticker']:
+            pass
+        stocks_prediction = predict_stock_trend(last_stocks, polarity_score)
+        prediction = [html.P(
+            "📈" if stocks_prediction == 1 else "📉",
+            style={
+                'font-size': '30px',
+                'margin': 0
+            }
+        )]
         return [children, prediction]
     else:
-        return [[],[]]
+        return [[], []]
 
 
 @app.callback(
@@ -308,44 +316,6 @@ def show_news(ticker):
             )
             children.append(div)
         return children
-
-
-def get_stocks(ticker, start_date, end_date):
-    db = client['Stock-Sentiment']
-    collection = db['Stocks']
-    cursor = collection.find(
-        {
-            "Ticker": ticker,
-            "Date": {"$gte": start_date, "$lte": end_date}
-        },
-        {
-            "Date": 1,
-            "Close": 1,
-            "Ticker": 1,
-            "Polarity": 1
-        }
-    )
-    list_cur = list(cursor)
-    return pd.DataFrame(list_cur)
-
-
-def get_tweets(ticker, start_date, end_date):
-    db = client['Stock-Sentiment']
-    collection = db['Tweets']
-    print(start_date, end_date)
-    while True:
-        cursor = collection.find(
-            {
-                "Ticker": ticker,
-                "Datetime": {"$gte": start_date, "$lte": end_date}
-            },
-        )
-        list_cur = list(cursor)
-        print(list_cur)
-        if len(list_cur) > 0:
-            break
-        time.sleep(60)
-    return pd.DataFrame(list_cur)
 
 
 if __name__ == '__main__':

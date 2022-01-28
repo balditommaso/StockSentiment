@@ -32,9 +32,10 @@ def prepare_stock_data(df, avg_polarity):
 
     return df.tail(1)
 
+
 def predict_stock_trend(stock_data_with_polarity, avg_polarity):
     # Classifying
-    clf = joblib.load('../model/stock_trend_predictor.pkl')
+    clf = joblib.load('model/stock_trend_predictor.pkl')
 
     today_data = prepare_stock_data(stock_data_with_polarity, avg_polarity)
     # print(today_data)

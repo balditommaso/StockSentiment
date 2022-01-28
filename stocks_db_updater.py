@@ -1,5 +1,7 @@
 import cmd
 from datetime import datetime
+
+import certifi
 import pytz
 from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
@@ -15,7 +17,11 @@ from preprocessing.tweet_weight import set_tweets_weight
 class App(cmd.Cmd):
     intro = 'Stock Sentiment Stock Database Updater Launched\n'
     prompt = '>'
-    mongo_client = MongoClient('mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority')
+    mongo_client = MongoClient(
+        'mongodb+srv://root:root@cluster0.wvzn3.mongodb.net/Stock-Sentiment?retryWrites=true&w=majority',
+        tlsCAFile=certifi.where()
+    )
+
 
     def do_init(self, arg):
         'Init the Stocks Database'
@@ -76,7 +82,6 @@ class App(cmd.Cmd):
 
                 stocks_df.at[i, 'Polarity'] = polarity
                 stocks_df.at[i, 'Daily_Tweets'] = int(daily_tweets_classified.shape[0])
-
 
             if stocks_df.shape[0] != 0:  # Faster than DataFrame.empty
                 db = self.mongo_client['Stock-Sentiment']
