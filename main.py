@@ -28,10 +28,9 @@ from preprocessing.tweet_cleaner import filter_tweets
 from preprocessing.tweet_weight import set_tweets_weight
 
 stylesheet = ['./assets/style.css']
-mongoDB = MongoManager()
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
-app.title = "Stock Sentiment"
+app.title = 'Stock Sentiment'
 
 market_status = 'Open'
 actual_close = 0
@@ -44,13 +43,13 @@ app.layout = html.Div([
     # create a loading page
 
     html.Div(
-        id="container",
+        id='container',
         children=[
             html.Div(
-                className="app-header",
+                className='app-header',
                 children=[
-                    html.Div('Stock Sentiment', className="title"),
-                    html.Label("The best friend for your investments")
+                    html.Div('Stock Sentiment', className='title'),
+                    html.Label('The best friend for your investments')
                 ]
             ),
             dcc.Interval(
@@ -86,19 +85,19 @@ app.layout = html.Div([
                         max=12,
                         step=None,
                         marks={
-                            0: "year",
-                            1: "11 mth",
-                            2: "10 mth",
-                            3: "9 mth",
-                            4: "8 mth",
-                            5: "7 mth",
-                            6: "6 mth",
-                            7: "5 mth",
-                            8: "4 mth",
-                            9: "3 mth",
-                            10: "2 mth",
-                            11: "1 mth",
-                            12: "week",
+                            0: 'year',
+                            1: '11 mth',
+                            2: '10 mth',
+                            3: '9 mth',
+                            4: '8 mth',
+                            5: '7 mth',
+                            6: '6 mth',
+                            7: '5 mth',
+                            8: '4 mth',
+                            9: '3 mth',
+                            10: '2 mth',
+                            11: '1 mth',
+                            12: 'week',
                         },
                         value=[0, 12],
                         allowCross=False
@@ -119,8 +118,8 @@ app.layout = html.Div([
                     dcc.Loading(
                         children=[
                             html.Div(
-                                id="load-tweets",
-                                className="list",
+                                id='load-tweets',
+                                className='list',
                                 children=[]
                             )
                         ],
@@ -133,7 +132,7 @@ app.layout = html.Div([
             html.Div(
                 id='news-view',
                 children=[
-                    html.H4('Last Financial News', className="title"),
+                    html.H4('Last Financial News', className='title'),
                     dcc.Loading(
                         children=[
                             html.Div(
@@ -152,7 +151,7 @@ app.layout = html.Div([
 
 @app.callback(
     Output('market-index', 'children'),
-    [Input("select-stock", "value"), Input('update-time', 'n_intervals')]
+    [Input('select-stock', 'value'), Input('update-time', 'n_intervals')]
 )
 def update_market_index(ticker, n):
     if ticker is not None:
@@ -162,9 +161,9 @@ def update_market_index(ticker, n):
             global pct_change
             actual_close, change, pct_change = get_live_data(ticker)
         return [
-            html.P("Actual close: " + str(round(actual_close, 2))),
+            html.P('Actual close: ' + str(round(actual_close, 2))),
             html.P(
-                str(round(change, 2)) + "(" + str(round(pct_change - 100, 2)) + "%)",
+                str(round(change, 2)) + '(' + str(round(pct_change - 100, 2)) + '%)',
                 style={'color': 'red' if change < 0 else 'green'}
             ),
         ]
@@ -178,47 +177,51 @@ def update_market_index(ticker, n):
 )
 def update_market(n):
     today = datetime.utcnow() - relativedelta(hours=5)
-    if (today.hour < 9) or (today.hour == 9 and today.minute < 30) or (today.hour > 16):
+    if (today.hour < 9) or (today.hour == 9 and today.minute < 30) or (today.hour >= 16):
         global market_status
         market_status = 'Closed'
     else:
         market_status = 'Open'
     return [
-        html.Label("Market " + market_status, style={'font-size': '28px', 'margin-right': '5px'}),
+        html.Label('Market ' + market_status, style={'font-size': '28px', 'margin-right': '5px'}),
         html.Span(today.strftime('%Y-%m-%d'), style={'font-size': '26px', 'text-align': 'right'}),
         html.Span(today.strftime('%H:%M:%S'), style={'font-size': '22px', 'opacity': '0.8'}),
     ]
 
 
 @app.callback(
-    Output("graph-view", "figure"),
-    [Input("select-stock", "value"), Input('select-period', 'value')]
+    Output('graph-view', 'figure'),
+    [Input('select-stock', 'value'), Input('select-period', 'value')]
 )
 def show_stock_graph(ticker, period):
     # validate value
     if ticker is None:
         return {}
+    global last_stocks
+    mongo_db = MongoManager()
+    last_stocks = mongo_db.get_stocks(ticker, datetime.utcnow() - relativedelta(years=1), datetime.utcnow())
 
     start_date = set_date(period[0])
     end_date = set_date(period[1])
     if start_date.date() == end_date.date():
         start_date = (start_date - relativedelta(weeks=1))
-    global last_stocks
-    last_stocks = mongoDB.get_stocks(ticker, start_date, end_date)
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    date_range = (last_stocks['Date'] > start_date) & (last_stocks['Date'] <= end_date)
+    fig = make_subplots(specs=[[{'secondary_y': True}]])
+    last_stocks = last_stocks.loc[date_range]
     fig.add_trace(
         go.Scatter(
-            x=last_stocks["Date"],
-            y=last_stocks["Close"],
-            name="Close"
+            x=last_stocks['Date'],
+            y=last_stocks['Close'],
+            name='Close'
         ),
         secondary_y=False
     )
     fig.add_trace(
         go.Scatter(
-            x=last_stocks["Date"],
-            y=last_stocks["Polarity"],
-            name="Polarity Score"
+            x=last_stocks['Date'],
+            y=last_stocks['Polarity'],
+            name='Polarity Score'
         ),
         secondary_y=True,
     )
@@ -239,19 +242,20 @@ def set_date(period):
 
 @app.callback(
     [Output('load-tweets', 'children'), Output('prediction', 'children')],
-    Input("select-stock", "value")
+    Input('select-stock', 'value')
 )
 def show_tweets(ticker):
     # validate the ticker selected
     if ticker is not None:
         # search new tweets
+        mongo_db = MongoManager()
         today = datetime.utcnow()
         if market_status == 'Close' and today.hour > 21:
             start_date = datetime(today.year, today.month, today.day, 21, 0, 0, tzinfo=pytz.utc)
         else:
             start_date = datetime(today.year, today.month, today.day-1, 21, 0, 0, tzinfo=pytz.utc)
         # collecting
-        raw_tweets = mongoDB.get_tweets(ticker, start_date, datetime.utcnow())
+        raw_tweets = mongo_db.get_tweets(ticker, start_date, datetime.utcnow())
         # pre-processing
         clean_tweets = filter_tweets(raw_tweets, ticker)
         weighted_tweets = set_tweets_weight(clean_tweets)
@@ -267,7 +271,7 @@ def show_tweets(ticker):
                     'border-top': 'solid lightgray 2px'
                 },
                 children=[
-                    html.Cite("@" + tweet["Account_Name"]),
+                    html.Cite('@' + tweet['Account_Name']),
                     html.P(tweet['Real_Text']),
                     html.Cite(tweet['Datetime'] - relativedelta(hours=4))
                 ],
@@ -278,13 +282,15 @@ def show_tweets(ticker):
         while last_stocks is None or ticker != last_stocks.iloc[0]['Ticker']:
             pass
         stocks_prediction = predict_stock_trend(last_stocks, polarity_score)
-        prediction = [html.P(
-            "📈" if stocks_prediction == 1 else "📉",
-            style={
-                'font-size': '30px',
-                'margin': 0
-            }
-        )]
+        prediction = [
+            html.Cite('Polarity Score: '),
+            html.P(str(int(polarity_score))),
+            html.Cite('Trend Prediction:'),
+            html.Img(
+                src='assets/image/Up.png' if stocks_prediction == 1 else 'assets/image/Down.png',
+                style={'width': '50px'}
+            )
+        ]
         return [children, prediction]
     else:
         return [[], []]
@@ -292,7 +298,7 @@ def show_tweets(ticker):
 
 @app.callback(
     Output('load-news', 'children'),
-    Input("select-stock", "value")
+    Input('select-stock', 'value')
 )
 def show_news(ticker):
     if ticker is not None:

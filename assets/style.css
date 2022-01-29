@@ -19,6 +19,7 @@ body {
     position: relative;
     max-width: 100%;
     row-gap: 10px;
+    align-items: center;
 }
 /*------------------------GENERAL ITEMS-----------------------------*/
 hr {
@@ -63,7 +64,7 @@ hr {
 }
 
 #select-stock{
-    grid-column: 2/5;
+    grid-column: 2/4;
     font-size: 25px;
     text-align: center;
     line-height: 30px;
@@ -71,7 +72,7 @@ hr {
 }
 
 #market-index{
-    grid-column: 5/9;
+    grid-column: 4/9;
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: center;
@@ -80,11 +81,19 @@ hr {
 
 #prediction {
     grid-column: 9/12;
-    font-size: 20px;
+    font-size: 15px;
     font-weight: bold;
     text-align: center;
     margin: 0;
     align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+}
+
+#prediction *{
+    margin: 0;
 }
 
 #market-index * {
@@ -93,6 +102,7 @@ hr {
     text-align: center;
     margin: 0;
     align-items: center;
+    line-height: 20px;
 }
 
 #stocks-view {

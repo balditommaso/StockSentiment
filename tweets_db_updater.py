@@ -66,7 +66,6 @@ if __name__ == '__main__':
     updater.start()
     while True:
         try:
-            print(last_updates)
             time.sleep(60)
         except KeyboardInterrupt:
             handle_stop()

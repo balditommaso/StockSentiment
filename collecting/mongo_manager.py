@@ -26,21 +26,17 @@ class MongoManager:
 
     def get_tweets(self, ticker, start_date, end_date):
         self.open_connection()
-        collection = self.db['Tweets']
-        while True:
-            cursor = collection.find(
-                {
-                    "Ticker": ticker,
-                    "Datetime": {"$gte": start_date, "$lte": end_date}
-                },
-            )
-            list_cur = list(cursor)
-            if len(list_cur) > 0:
-                break
-            time.sleep(60)
 
+        collection = self.db['Tweets']
+        cursor = collection.find(
+            {
+                "Ticker": ticker,
+                "Datetime": {"$gte": start_date, "$lte": end_date}
+            },
+        )
+        result = list(cursor)
         self.close_connection()
-        return pd.DataFrame(list_cur)
+        return pd.DataFrame(result)
 
     def get_stocks(self, ticker, start_date, end_date):
         self.open_connection()
