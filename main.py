@@ -1,22 +1,15 @@
-import time
 
-import certifi
 import dash
-import joblib
 import pytz
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
-import plotly.express as px
 import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
-from dotenv import load_dotenv
 from plotly.subplots import make_subplots
-import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from pymongo import MongoClient
 
 import common.costants as const
 from classification.stock_prediction import predict_stock_trend
@@ -33,9 +26,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = 'Stock Sentiment'
 
 market_status = 'Open'
-actual_close = 0
-change = 0
-pct_change = 0
 last_stocks = None
 
 
@@ -149,6 +139,7 @@ app.layout = html.Div([
     )
 ])
 
+
 @app.callback(
     Output('market-index', 'children'),
     [Input('select-stock', 'value'), Input('update-time', 'n_intervals')]
@@ -156,17 +147,16 @@ app.layout = html.Div([
 def update_market_index(ticker, n):
     if ticker is not None:
         if n % 5 == 0:
-            global change
-            global actual_close
-            global pct_change
             actual_close, change, pct_change = get_live_data(ticker)
-        return [
-            html.P('Actual close: ' + str(round(actual_close, 2))),
-            html.P(
-                str(round(change, 2)) + '(' + str(round(pct_change - 100, 2)) + '%)',
-                style={'color': 'red' if change < 0 else 'green'}
-            ),
-        ]
+            return [
+                html.P('Actual close: ' + str(round(actual_close, 2))),
+                html.P(
+                    str(round(change, 2)) + '(' + str(round(pct_change - 100, 2)) + '%)',
+                    style={'color': 'red' if change < 0 else 'green'}
+                ),
+            ]
+        else:
+            raise PreventUpdate
     else:
         return []
 
@@ -201,26 +191,29 @@ def show_stock_graph(ticker, period):
     mongo_db = MongoManager()
     last_stocks = mongo_db.get_stocks(ticker, datetime.utcnow() - relativedelta(years=1), datetime.utcnow())
 
+    all_stocks = last_stocks
     start_date = set_date(period[0])
     end_date = set_date(period[1])
     if start_date.date() == end_date.date():
         start_date = (start_date - relativedelta(weeks=1))
 
-    date_range = (last_stocks['Date'] > start_date) & (last_stocks['Date'] <= end_date)
+    date_range = (all_stocks['Date'] > start_date) & (all_stocks['Date'] <= end_date)
+    all_stocks = all_stocks.loc[date_range]
+    all_stocks.sort_values(['Date'], inplace=True)
+
     fig = make_subplots(specs=[[{'secondary_y': True}]])
-    last_stocks = last_stocks.loc[date_range]
     fig.add_trace(
         go.Scatter(
-            x=last_stocks['Date'],
-            y=last_stocks['Close'],
+            x=all_stocks['Date'],
+            y=all_stocks['Close'],
             name='Close'
         ),
         secondary_y=False
     )
     fig.add_trace(
         go.Scatter(
-            x=last_stocks['Date'],
-            y=last_stocks['Polarity'],
+            x=all_stocks['Date'],
+            y=all_stocks['Polarity'],
             name='Polarity Score'
         ),
         secondary_y=True,
