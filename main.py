@@ -26,12 +26,9 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = 'Stock Sentiment'
 
 market_status = 'Open'
-last_stocks = None
-
 
 app.layout = html.Div([
-    # create a loading page
-
+    dcc.Store(id='data-stocks'),
     html.Div(
         id='container',
         children=[
@@ -187,7 +184,7 @@ def show_stock_graph(ticker, period):
     # validate value
     if ticker is None:
         return {}
-    global last_stocks
+
     mongo_db = MongoManager()
     last_stocks = mongo_db.get_stocks(ticker, datetime.utcnow() - relativedelta(years=1), datetime.utcnow())
 
@@ -272,8 +269,7 @@ def show_tweets(ticker):
             children.append(div)
         polarity_score = get_daily_polarity(processed_tweets)
         # synch with load_stocks
-        while last_stocks is None or ticker != last_stocks.iloc[0]['Ticker']:
-            pass
+        last_stocks = mongo_db.get_stocks(ticker, datetime.utcnow() - relativedelta(years=1), datetime.utcnow())
         stocks_prediction = predict_stock_trend(last_stocks, polarity_score)
         prediction = [
             html.Cite('Polarity Score: '),
@@ -315,13 +311,6 @@ def show_news(ticker):
             )
             children.append(div)
         return children
-
-    
-def process_tweet(df_tweet, ticker):
-    clean_tweets = filter_tweets(df_tweet, ticker)
-    weighted_tweets = set_tweets_weight(clean_tweets)
-    processed_tweets = classify_tweets(weighted_tweets)
-    return processed_tweets
 
 
 if __name__ == '__main__':
